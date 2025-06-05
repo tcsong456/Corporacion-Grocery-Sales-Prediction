@@ -1,6 +1,8 @@
 PROJECT_NAME="corporacion-sales-prediction"
 PROJECT_ID=$(gcloud projects list --filter="name:$PROJECT_NAME" \
                                   --format="value(projectId)")
+gcloud config set project $PROJECT_ID
+gcloud auth application-default set-quota-project $PROJECT_ID
 PROJECT_NBR=`gcloud projects describe $PROJECT_ID | grep projectNumber | \
 cut -d':' -f2 |  tr -d "'" | xargs`
 SA_NAME="corpor-sales-sa"
@@ -13,6 +15,7 @@ gcloud iam service-accounts create $SA_NAME \
 ROLES=("roles/editor"
        "roles/iam.serviceAccountUser"
        "roles/storage.admin"
+       "roles/resourcemanager.projectIamAdmin"
 )
 for ROLE in "${ROLES[@]}"; do
     gcloud projects add-iam-policy-binding $PROJECT_ID \
