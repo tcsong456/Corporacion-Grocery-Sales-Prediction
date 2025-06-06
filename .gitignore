@@ -5,6 +5,8 @@ __pycache__/
 
 #self added
 key.json
+terraform/*
+!terraform/*.tf
 
 # C extensions
 *.so

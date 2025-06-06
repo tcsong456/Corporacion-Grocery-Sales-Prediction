@@ -3,7 +3,53 @@ Terraform used the selected providers to generate the following execution
 plan. Resource actions are indicated with the following symbols:
   [32m+[0m create[0m
 
-Terraform will perform the following actions:
+Terraform planned the following actions, but then encountered a problem:
+
+[1m  # google_compute_firewall.allow_ingress_on_tcp[0m will be created
+[0m  [32m+[0m[0m resource "google_compute_firewall" "allow_ingress_on_tcp" {
+      [32m+[0m[0m creation_timestamp = (known after apply)
+      [32m+[0m[0m description        = "allow ingress traffic from within subnet to services listen on port 5432"
+      [32m+[0m[0m destination_ranges = (known after apply)
+      [32m+[0m[0m direction          = "INGRESS"
+      [32m+[0m[0m enable_logging     = (known after apply)
+      [32m+[0m[0m id                 = (known after apply)
+      [32m+[0m[0m name               = "allow-intra-to-tcp"
+      [32m+[0m[0m network            = "corpor-sales-subnet"
+      [32m+[0m[0m priority           = 1000
+      [32m+[0m[0m project            = "corporacion-sales-prediction"
+      [32m+[0m[0m self_link          = (known after apply)
+      [32m+[0m[0m source_ranges      = [
+          [32m+[0m[0m "10.0.0.0/16",
+        ]
+
+      [32m+[0m[0m allow {
+          [32m+[0m[0m ports    = [
+              [32m+[0m[0m "5432",
+            ]
+          [32m+[0m[0m protocol = "tcp"
+        }
+    }
+
+[1m  # google_compute_global_address.reserved_ip_for_psa[0m will be created
+[0m  [32m+[0m[0m resource "google_compute_global_address" "reserved_ip_for_psa" {
+      [32m+[0m[0m address            = (known after apply)
+      [32m+[0m[0m address_type       = "INTERNAL"
+      [32m+[0m[0m creation_timestamp = (known after apply)
+      [32m+[0m[0m effective_labels   = {
+          [32m+[0m[0m "goog-terraform-provisioned" = "true"
+        }
+      [32m+[0m[0m id                 = (known after apply)
+      [32m+[0m[0m label_fingerprint  = (known after apply)
+      [32m+[0m[0m name               = "psa_ips"
+      [32m+[0m[0m network            = "projects/corporacion-sales-prediction/global/networks/corpor-sales-vpc"
+      [32m+[0m[0m prefix_length      = 16
+      [32m+[0m[0m project            = "corporacion-sales-prediction"
+      [32m+[0m[0m purpose            = "VPC_PEERING"
+      [32m+[0m[0m self_link          = (known after apply)
+      [32m+[0m[0m terraform_labels   = {
+          [32m+[0m[0m "goog-terraform-provisioned" = "true"
+        }
+    }
 
 [1m  # google_project_iam_member.composer_roles["roles/artifactregistry.reader"][0m will be created
 [0m  [32m+[0m[0m resource "google_project_iam_member" "composer_roles" {
@@ -117,6 +163,14 @@ Terraform will perform the following actions:
       [32m+[0m[0m service            = "iam.googleapis.com"
     }
 
+[1m  # google_project_service.enable_composer_required_apis["servicenetworking.googleapis.com"][0m will be created
+[0m  [32m+[0m[0m resource "google_project_service" "enable_composer_required_apis" {
+      [32m+[0m[0m disable_on_destroy = true
+      [32m+[0m[0m id                 = (known after apply)
+      [32m+[0m[0m project            = "corporacion-sales-prediction"
+      [32m+[0m[0m service            = "servicenetworking.googleapis.com"
+    }
+
 [1m  # google_project_service.enable_composer_required_apis["sqladmin.googleapis.com"][0m will be created
 [0m  [32m+[0m[0m resource "google_project_service" "enable_composer_required_apis" {
       [32m+[0m[0m disable_on_destroy = true
@@ -147,25 +201,357 @@ Terraform will perform the following actions:
       [32m+[0m[0m id              = (known after apply)
     }
 
-[1mPlan:[0m 17 to add, 0 to change, 0 to destroy.
+[1m  # module.vpc_creation.module.subnets.google_compute_subnetwork.subnetwork["europe-west1/corpor-sales-subnet"][0m will be created
+[0m  [32m+[0m[0m resource "google_compute_subnetwork" "subnetwork" {
+      [32m+[0m[0m creation_timestamp         = (known after apply)
+      [32m+[0m[0m enable_flow_logs           = (known after apply)
+      [32m+[0m[0m external_ipv6_prefix       = (known after apply)
+      [32m+[0m[0m fingerprint                = (known after apply)
+      [32m+[0m[0m gateway_address            = (known after apply)
+      [32m+[0m[0m id                         = (known after apply)
+      [32m+[0m[0m internal_ipv6_prefix       = (known after apply)
+      [32m+[0m[0m ip_cidr_range              = "10.0.0.0/16"
+      [32m+[0m[0m ipv6_cidr_range            = (known after apply)
+      [32m+[0m[0m ipv6_gce_endpoint          = (known after apply)
+      [32m+[0m[0m name                       = "corpor-sales-subnet"
+      [32m+[0m[0m network                    = "corpor-sales-vpc"
+      [32m+[0m[0m private_ip_google_access   = true
+      [32m+[0m[0m private_ipv6_google_access = (known after apply)
+      [32m+[0m[0m project                    = "corporacion-sales-prediction"
+      [32m+[0m[0m purpose                    = (known after apply)
+      [32m+[0m[0m region                     = "europe-west1"
+      [32m+[0m[0m self_link                  = (known after apply)
+      [32m+[0m[0m stack_type                 = (known after apply)
+      [32m+[0m[0m state                      = (known after apply)
+      [32m+[0m[0m subnetwork_id              = (known after apply)
+
+      [32m+[0m[0m secondary_ip_range {
+          [32m+[0m[0m ip_cidr_range = "10.2.0.0/22"
+          [32m+[0m[0m range_name    = "services"
+        }
+    }
+
+[1m  # module.vpc_creation.module.vpc.google_compute_network.network[0m will be created
+[0m  [32m+[0m[0m resource "google_compute_network" "network" {
+      [32m+[0m[0m auto_create_subnetworks                   = false
+      [32m+[0m[0m bgp_always_compare_med                    = false
+      [32m+[0m[0m bgp_best_path_selection_mode              = "LEGACY"
+      [32m+[0m[0m bgp_inter_region_cost                     = (known after apply)
+      [32m+[0m[0m delete_default_routes_on_create           = false
+      [32m+[0m[0m enable_ula_internal_ipv6                  = false
+      [32m+[0m[0m gateway_ipv4                              = (known after apply)
+      [32m+[0m[0m id                                        = (known after apply)
+      [32m+[0m[0m internal_ipv6_range                       = (known after apply)
+      [32m+[0m[0m mtu                                       = 0
+      [32m+[0m[0m name                                      = "corpor-sales-vpc"
+      [32m+[0m[0m network_firewall_policy_enforcement_order = "AFTER_CLASSIC_FIREWALL"
+      [32m+[0m[0m network_id                                = (known after apply)
+      [32m+[0m[0m numeric_id                                = (known after apply)
+      [32m+[0m[0m project                                   = "corporacion-sales-prediction"
+      [32m+[0m[0m routing_mode                              = "GLOBAL"
+      [32m+[0m[0m self_link                                 = (known after apply)
+        [90m# (1 unchanged attribute hidden)[0m[0m
+    }
+
+[1mPlan:[0m 22 to add, 0 to change, 0 to destroy.
+[0m
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  [32m+[0m create[0m
+
+Terraform will perform the following actions:
+
+[1m  # google_compute_firewall.allow_ingress_on_tcp[0m will be created
+[0m  [32m+[0m[0m resource "google_compute_firewall" "allow_ingress_on_tcp" {
+      [32m+[0m[0m creation_timestamp = (known after apply)
+      [32m+[0m[0m description        = "allow ingress traffic from within subnet to services listen on port 5432"
+      [32m+[0m[0m destination_ranges = (known after apply)
+      [32m+[0m[0m direction          = "INGRESS"
+      [32m+[0m[0m enable_logging     = (known after apply)
+      [32m+[0m[0m id                 = (known after apply)
+      [32m+[0m[0m name               = "allow-intra-to-tcp"
+      [32m+[0m[0m network            = "corpor-sales-subnet"
+      [32m+[0m[0m priority           = 1000
+      [32m+[0m[0m project            = "corporacion-sales-prediction"
+      [32m+[0m[0m self_link          = (known after apply)
+      [32m+[0m[0m source_ranges      = [
+          [32m+[0m[0m "10.0.0.0/16",
+        ]
+
+      [32m+[0m[0m allow {
+          [32m+[0m[0m ports    = [
+              [32m+[0m[0m "5432",
+            ]
+          [32m+[0m[0m protocol = "tcp"
+        }
+    }
+
+[1m  # google_compute_global_address.reserved_ip_for_psa[0m will be created
+[0m  [32m+[0m[0m resource "google_compute_global_address" "reserved_ip_for_psa" {
+      [32m+[0m[0m address            = (known after apply)
+      [32m+[0m[0m address_type       = "INTERNAL"
+      [32m+[0m[0m creation_timestamp = (known after apply)
+      [32m+[0m[0m effective_labels   = {
+          [32m+[0m[0m "goog-terraform-provisioned" = "true"
+        }
+      [32m+[0m[0m id                 = (known after apply)
+      [32m+[0m[0m label_fingerprint  = (known after apply)
+      [32m+[0m[0m name               = "psa_ips"
+      [32m+[0m[0m network            = "projects/corporacion-sales-prediction/global/networks/corpor-sales-vpc"
+      [32m+[0m[0m prefix_length      = 16
+      [32m+[0m[0m project            = "corporacion-sales-prediction"
+      [32m+[0m[0m purpose            = "VPC_PEERING"
+      [32m+[0m[0m self_link          = (known after apply)
+      [32m+[0m[0m terraform_labels   = {
+          [32m+[0m[0m "goog-terraform-provisioned" = "true"
+        }
+    }
+
+[1m  # google_project_iam_member.composer_roles["roles/artifactregistry.reader"][0m will be created
+[0m  [32m+[0m[0m resource "google_project_iam_member" "composer_roles" {
+      [32m+[0m[0m etag    = (known after apply)
+      [32m+[0m[0m id      = (known after apply)
+      [32m+[0m[0m member  = "serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com"
+      [32m+[0m[0m project = "corporacion-sales-prediction"
+      [32m+[0m[0m role    = "roles/artifactregistry.reader"
+    }
+
+[1m  # google_project_iam_member.composer_roles["roles/composer.admin"][0m will be created
+[0m  [32m+[0m[0m resource "google_project_iam_member" "composer_roles" {
+      [32m+[0m[0m etag    = (known after apply)
+      [32m+[0m[0m id      = (known after apply)
+      [32m+[0m[0m member  = "serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com"
+      [32m+[0m[0m project = "corporacion-sales-prediction"
+      [32m+[0m[0m role    = "roles/composer.admin"
+    }
+
+[1m  # google_project_iam_member.composer_roles["roles/composer.worker"][0m will be created
+[0m  [32m+[0m[0m resource "google_project_iam_member" "composer_roles" {
+      [32m+[0m[0m etag    = (known after apply)
+      [32m+[0m[0m id      = (known after apply)
+      [32m+[0m[0m member  = "serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com"
+      [32m+[0m[0m project = "corporacion-sales-prediction"
+      [32m+[0m[0m role    = "roles/composer.worker"
+    }
+
+[1m  # google_project_iam_member.composer_roles["roles/compute.networkAdmin"][0m will be created
+[0m  [32m+[0m[0m resource "google_project_iam_member" "composer_roles" {
+      [32m+[0m[0m etag    = (known after apply)
+      [32m+[0m[0m id      = (known after apply)
+      [32m+[0m[0m member  = "serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com"
+      [32m+[0m[0m project = "corporacion-sales-prediction"
+      [32m+[0m[0m role    = "roles/compute.networkAdmin"
+    }
+
+[1m  # google_project_iam_member.composer_roles["roles/container.clusterViewer"][0m will be created
+[0m  [32m+[0m[0m resource "google_project_iam_member" "composer_roles" {
+      [32m+[0m[0m etag    = (known after apply)
+      [32m+[0m[0m id      = (known after apply)
+      [32m+[0m[0m member  = "serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com"
+      [32m+[0m[0m project = "corporacion-sales-prediction"
+      [32m+[0m[0m role    = "roles/container.clusterViewer"
+    }
+
+[1m  # google_project_iam_member.composer_roles["roles/iam.serviceAccountAdmin"][0m will be created
+[0m  [32m+[0m[0m resource "google_project_iam_member" "composer_roles" {
+      [32m+[0m[0m etag    = (known after apply)
+      [32m+[0m[0m id      = (known after apply)
+      [32m+[0m[0m member  = "serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com"
+      [32m+[0m[0m project = "corporacion-sales-prediction"
+      [32m+[0m[0m role    = "roles/iam.serviceAccountAdmin"
+    }
+
+[1m  # google_project_iam_member.composer_roles["roles/logging.admin"][0m will be created
+[0m  [32m+[0m[0m resource "google_project_iam_member" "composer_roles" {
+      [32m+[0m[0m etag    = (known after apply)
+      [32m+[0m[0m id      = (known after apply)
+      [32m+[0m[0m member  = "serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com"
+      [32m+[0m[0m project = "corporacion-sales-prediction"
+      [32m+[0m[0m role    = "roles/logging.admin"
+    }
+
+[1m  # google_project_iam_member.composer_roles["roles/storage.admin"][0m will be created
+[0m  [32m+[0m[0m resource "google_project_iam_member" "composer_roles" {
+      [32m+[0m[0m etag    = (known after apply)
+      [32m+[0m[0m id      = (known after apply)
+      [32m+[0m[0m member  = "serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com"
+      [32m+[0m[0m project = "corporacion-sales-prediction"
+      [32m+[0m[0m role    = "roles/storage.admin"
+    }
+
+[1m  # google_project_service.enable_composer_required_apis["cloudresourcemanager.googleapis.com"][0m will be created
+[0m  [32m+[0m[0m resource "google_project_service" "enable_composer_required_apis" {
+      [32m+[0m[0m disable_on_destroy = true
+      [32m+[0m[0m id                 = (known after apply)
+      [32m+[0m[0m project            = "corporacion-sales-prediction"
+      [32m+[0m[0m service            = "cloudresourcemanager.googleapis.com"
+    }
+
+[1m  # google_project_service.enable_composer_required_apis["composer.googleapis.com"][0m will be created
+[0m  [32m+[0m[0m resource "google_project_service" "enable_composer_required_apis" {
+      [32m+[0m[0m disable_on_destroy = true
+      [32m+[0m[0m id                 = (known after apply)
+      [32m+[0m[0m project            = "corporacion-sales-prediction"
+      [32m+[0m[0m service            = "composer.googleapis.com"
+    }
+
+[1m  # google_project_service.enable_composer_required_apis["compute.googleapis.com"][0m will be created
+[0m  [32m+[0m[0m resource "google_project_service" "enable_composer_required_apis" {
+      [32m+[0m[0m disable_on_destroy = true
+      [32m+[0m[0m id                 = (known after apply)
+      [32m+[0m[0m project            = "corporacion-sales-prediction"
+      [32m+[0m[0m service            = "compute.googleapis.com"
+    }
+
+[1m  # google_project_service.enable_composer_required_apis["container.googleapis.com"][0m will be created
+[0m  [32m+[0m[0m resource "google_project_service" "enable_composer_required_apis" {
+      [32m+[0m[0m disable_on_destroy = true
+      [32m+[0m[0m id                 = (known after apply)
+      [32m+[0m[0m project            = "corporacion-sales-prediction"
+      [32m+[0m[0m service            = "container.googleapis.com"
+    }
+
+[1m  # google_project_service.enable_composer_required_apis["iam.googleapis.com"][0m will be created
+[0m  [32m+[0m[0m resource "google_project_service" "enable_composer_required_apis" {
+      [32m+[0m[0m disable_on_destroy = true
+      [32m+[0m[0m id                 = (known after apply)
+      [32m+[0m[0m project            = "corporacion-sales-prediction"
+      [32m+[0m[0m service            = "iam.googleapis.com"
+    }
+
+[1m  # google_project_service.enable_composer_required_apis["servicenetworking.googleapis.com"][0m will be created
+[0m  [32m+[0m[0m resource "google_project_service" "enable_composer_required_apis" {
+      [32m+[0m[0m disable_on_destroy = true
+      [32m+[0m[0m id                 = (known after apply)
+      [32m+[0m[0m project            = "corporacion-sales-prediction"
+      [32m+[0m[0m service            = "servicenetworking.googleapis.com"
+    }
+
+[1m  # google_project_service.enable_composer_required_apis["sqladmin.googleapis.com"][0m will be created
+[0m  [32m+[0m[0m resource "google_project_service" "enable_composer_required_apis" {
+      [32m+[0m[0m disable_on_destroy = true
+      [32m+[0m[0m id                 = (known after apply)
+      [32m+[0m[0m project            = "corporacion-sales-prediction"
+      [32m+[0m[0m service            = "sqladmin.googleapis.com"
+    }
+
+[1m  # google_project_service.enable_composer_required_apis["storage.googleapis.com"][0m will be created
+[0m  [32m+[0m[0m resource "google_project_service" "enable_composer_required_apis" {
+      [32m+[0m[0m disable_on_destroy = true
+      [32m+[0m[0m id                 = (known after apply)
+      [32m+[0m[0m project            = "corporacion-sales-prediction"
+      [32m+[0m[0m service            = "storage.googleapis.com"
+    }
+
+[1m  # google_project_service.enable_resource_manager[0m will be created
+[0m  [32m+[0m[0m resource "google_project_service" "enable_resource_manager" {
+      [32m+[0m[0m disable_on_destroy = false
+      [32m+[0m[0m id                 = (known after apply)
+      [32m+[0m[0m project            = "corporacion-sales-prediction"
+      [32m+[0m[0m service            = "cloudresourcemanager.googleapis.com"
+    }
+
+[1m  # google_service_networking_connection.private_connection_with_service_networking[0m will be created
+[0m  [32m+[0m[0m resource "google_service_networking_connection" "private_connection_with_service_networking" {
+      [32m+[0m[0m id                      = (known after apply)
+      [32m+[0m[0m network                 = "projects/corporacion-sales-prediction/global/networks/corpor-sales-vpc"
+      [32m+[0m[0m peering                 = (known after apply)
+      [32m+[0m[0m reserved_peering_ranges = [
+          [32m+[0m[0m "psa_ips",
+        ]
+      [32m+[0m[0m service                 = "servicenetworking.googleapis.com"
+    }
+
+[1m  # time_sleep.wait_for_composer_apis[0m will be created
+[0m  [32m+[0m[0m resource "time_sleep" "wait_for_composer_apis" {
+      [32m+[0m[0m create_duration = "180s"
+      [32m+[0m[0m id              = (known after apply)
+    }
+
+[1m  # module.vpc_creation.module.subnets.google_compute_subnetwork.subnetwork["europe-west1/corpor-sales-subnet"][0m will be created
+[0m  [32m+[0m[0m resource "google_compute_subnetwork" "subnetwork" {
+      [32m+[0m[0m creation_timestamp         = (known after apply)
+      [32m+[0m[0m enable_flow_logs           = (known after apply)
+      [32m+[0m[0m external_ipv6_prefix       = (known after apply)
+      [32m+[0m[0m fingerprint                = (known after apply)
+      [32m+[0m[0m gateway_address            = (known after apply)
+      [32m+[0m[0m id                         = (known after apply)
+      [32m+[0m[0m internal_ipv6_prefix       = (known after apply)
+      [32m+[0m[0m ip_cidr_range              = "10.0.0.0/16"
+      [32m+[0m[0m ipv6_cidr_range            = (known after apply)
+      [32m+[0m[0m ipv6_gce_endpoint          = (known after apply)
+      [32m+[0m[0m name                       = "corpor-sales-subnet"
+      [32m+[0m[0m network                    = "corpor-sales-vpc"
+      [32m+[0m[0m private_ip_google_access   = true
+      [32m+[0m[0m private_ipv6_google_access = (known after apply)
+      [32m+[0m[0m project                    = "corporacion-sales-prediction"
+      [32m+[0m[0m purpose                    = (known after apply)
+      [32m+[0m[0m region                     = "europe-west1"
+      [32m+[0m[0m self_link                  = (known after apply)
+      [32m+[0m[0m stack_type                 = (known after apply)
+      [32m+[0m[0m state                      = (known after apply)
+      [32m+[0m[0m subnetwork_id              = (known after apply)
+
+      [32m+[0m[0m secondary_ip_range {
+          [32m+[0m[0m ip_cidr_range = "10.2.0.0/22"
+          [32m+[0m[0m range_name    = "services"
+        }
+    }
+
+[1m  # module.vpc_creation.module.vpc.google_compute_network.network[0m will be created
+[0m  [32m+[0m[0m resource "google_compute_network" "network" {
+      [32m+[0m[0m auto_create_subnetworks                   = false
+      [32m+[0m[0m bgp_always_compare_med                    = false
+      [32m+[0m[0m bgp_best_path_selection_mode              = "LEGACY"
+      [32m+[0m[0m bgp_inter_region_cost                     = (known after apply)
+      [32m+[0m[0m delete_default_routes_on_create           = false
+      [32m+[0m[0m enable_ula_internal_ipv6                  = false
+      [32m+[0m[0m gateway_ipv4                              = (known after apply)
+      [32m+[0m[0m id                                        = (known after apply)
+      [32m+[0m[0m internal_ipv6_range                       = (known after apply)
+      [32m+[0m[0m mtu                                       = 0
+      [32m+[0m[0m name                                      = "corpor-sales-vpc"
+      [32m+[0m[0m network_firewall_policy_enforcement_order = "AFTER_CLASSIC_FIREWALL"
+      [32m+[0m[0m network_id                                = (known after apply)
+      [32m+[0m[0m numeric_id                                = (known after apply)
+      [32m+[0m[0m project                                   = "corporacion-sales-prediction"
+      [32m+[0m[0m routing_mode                              = "GLOBAL"
+      [32m+[0m[0m self_link                                 = (known after apply)
+        [90m# (1 unchanged attribute hidden)[0m[0m
+    }
+
+[1mPlan:[0m 23 to add, 0 to change, 0 to destroy.
 [0m[0m[1mgoogle_project_service.enable_resource_manager: Creating...[0m[0m
+[0m[1mmodule.vpc_creation.module.vpc.google_compute_network.network: Creating...[0m[0m
 [0m[1mgoogle_project_service.enable_resource_manager: Creation complete after 4s [id=corporacion-sales-prediction/cloudresourcemanager.googleapis.com][0m
-[0m[1mgoogle_project_service.enable_composer_required_apis["cloudresourcemanager.googleapis.com"]: Creating...[0m[0m
-[0m[1mgoogle_project_service.enable_composer_required_apis["storage.googleapis.com"]: Creating...[0m[0m
-[0m[1mgoogle_project_service.enable_composer_required_apis["sqladmin.googleapis.com"]: Creating...[0m[0m
-[0m[1mgoogle_project_service.enable_composer_required_apis["container.googleapis.com"]: Creating...[0m[0m
 [0m[1mgoogle_project_service.enable_composer_required_apis["compute.googleapis.com"]: Creating...[0m[0m
-[0m[1mgoogle_project_service.enable_composer_required_apis["composer.googleapis.com"]: Creating...[0m[0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["container.googleapis.com"]: Creating...[0m[0m
 [0m[1mgoogle_project_service.enable_composer_required_apis["iam.googleapis.com"]: Creating...[0m[0m
-[0m[1mgoogle_project_service.enable_composer_required_apis["storage.googleapis.com"]: Creation complete after 3s [id=corporacion-sales-prediction/storage.googleapis.com][0m
-[0m[1mgoogle_project_service.enable_composer_required_apis["composer.googleapis.com"]: Creation complete after 3s [id=corporacion-sales-prediction/composer.googleapis.com][0m
-[0m[1mgoogle_project_service.enable_composer_required_apis["iam.googleapis.com"]: Creation complete after 3s [id=corporacion-sales-prediction/iam.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["composer.googleapis.com"]: Creating...[0m[0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["cloudresourcemanager.googleapis.com"]: Creating...[0m[0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["sqladmin.googleapis.com"]: Creating...[0m[0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["storage.googleapis.com"]: Creating...[0m[0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["servicenetworking.googleapis.com"]: Creating...[0m[0m
 [0m[1mgoogle_project_service.enable_composer_required_apis["sqladmin.googleapis.com"]: Creation complete after 3s [id=corporacion-sales-prediction/sqladmin.googleapis.com][0m
-[0m[1mgoogle_project_service.enable_composer_required_apis["cloudresourcemanager.googleapis.com"]: Creation complete after 3s [id=corporacion-sales-prediction/cloudresourcemanager.googleapis.com][0m
 [0m[1mgoogle_project_service.enable_composer_required_apis["container.googleapis.com"]: Creation complete after 3s [id=corporacion-sales-prediction/container.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["cloudresourcemanager.googleapis.com"]: Creation complete after 3s [id=corporacion-sales-prediction/cloudresourcemanager.googleapis.com][0m
 [0m[1mgoogle_project_service.enable_composer_required_apis["compute.googleapis.com"]: Creation complete after 3s [id=corporacion-sales-prediction/compute.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["composer.googleapis.com"]: Creation complete after 3s [id=corporacion-sales-prediction/composer.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["storage.googleapis.com"]: Creation complete after 3s [id=corporacion-sales-prediction/storage.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["iam.googleapis.com"]: Creation complete after 3s [id=corporacion-sales-prediction/iam.googleapis.com][0m
+[0m[1mmodule.vpc_creation.module.vpc.google_compute_network.network: Still creating... [10s elapsed][0m[0m
+[0m[1mmodule.vpc_creation.module.vpc.google_compute_network.network: Creation complete after 12s [id=projects/corporacion-sales-prediction/global/networks/corpor-sales-vpc][0m
+[0m[1mmodule.vpc_creation.module.subnets.google_compute_subnetwork.subnetwork["europe-west1/corpor-sales-subnet"]: Creating...[0m[0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["servicenetworking.googleapis.com"]: Still creating... [10s elapsed][0m[0m
+[0m[1mmodule.vpc_creation.module.subnets.google_compute_subnetwork.subnetwork["europe-west1/corpor-sales-subnet"]: Still creating... [10s elapsed][0m[0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["servicenetworking.googleapis.com"]: Still creating... [20s elapsed][0m[0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["servicenetworking.googleapis.com"]: Creation complete after 23s [id=corporacion-sales-prediction/servicenetworking.googleapis.com][0m
 [0m[1mtime_sleep.wait_for_composer_apis: Creating...[0m[0m
+[0m[1mmodule.vpc_creation.module.subnets.google_compute_subnetwork.subnetwork["europe-west1/corpor-sales-subnet"]: Still creating... [20s elapsed][0m[0m
 [0m[1mtime_sleep.wait_for_composer_apis: Still creating... [10s elapsed][0m[0m
+[0m[1mmodule.vpc_creation.module.subnets.google_compute_subnetwork.subnetwork["europe-west1/corpor-sales-subnet"]: Still creating... [30s elapsed][0m[0m
+[0m[1mmodule.vpc_creation.module.subnets.google_compute_subnetwork.subnetwork["europe-west1/corpor-sales-subnet"]: Creation complete after 33s [id=projects/corporacion-sales-prediction/regions/europe-west1/subnetworks/corpor-sales-subnet][0m
+[0m[1mgoogle_compute_global_address.reserved_ip_for_psa: Creating...[0m[0m
 [0m[1mtime_sleep.wait_for_composer_apis: Still creating... [20s elapsed][0m[0m
 [0m[1mtime_sleep.wait_for_composer_apis: Still creating... [30s elapsed][0m[0m
 [0m[1mtime_sleep.wait_for_composer_apis: Still creating... [40s elapsed][0m[0m
@@ -182,28 +568,182 @@ Terraform will perform the following actions:
 [0m[1mtime_sleep.wait_for_composer_apis: Still creating... [2m30s elapsed][0m[0m
 [0m[1mtime_sleep.wait_for_composer_apis: Still creating... [2m40s elapsed][0m[0m
 [0m[1mtime_sleep.wait_for_composer_apis: Still creating... [2m50s elapsed][0m[0m
-[0m[1mtime_sleep.wait_for_composer_apis: Creation complete after 3m0s [id=2025-06-05T19:48:54Z][0m
+[0m[1mtime_sleep.wait_for_composer_apis: Creation complete after 3m0s [id=2025-06-06T17:44:31Z][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/artifactregistry.reader"]: Creating...[0m[0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/container.clusterViewer"]: Creating...[0m[0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/composer.admin"]: Creating...[0m[0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/compute.networkAdmin"]: Creating...[0m[0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/storage.admin"]: Creating...[0m[0m
 [0m[1mgoogle_project_iam_member.composer_roles["roles/composer.worker"]: Creating...[0m[0m
 [0m[1mgoogle_project_iam_member.composer_roles["roles/iam.serviceAccountAdmin"]: Creating...[0m[0m
-[0m[1mgoogle_project_iam_member.composer_roles["roles/container.clusterViewer"]: Creating...[0m[0m
-[0m[1mgoogle_project_iam_member.composer_roles["roles/storage.admin"]: Creating...[0m[0m
-[0m[1mgoogle_project_iam_member.composer_roles["roles/artifactregistry.reader"]: Creating...[0m[0m
-[0m[1mgoogle_project_iam_member.composer_roles["roles/compute.networkAdmin"]: Creating...[0m[0m
-[0m[1mgoogle_project_iam_member.composer_roles["roles/composer.admin"]: Creating...[0m[0m
 [0m[1mgoogle_project_iam_member.composer_roles["roles/logging.admin"]: Creating...[0m[0m
+[0m[1mgoogle_compute_firewall.allow_ingress_on_tcp: Creating...[0m[0m
 [0m[1mgoogle_project_iam_member.composer_roles["roles/logging.admin"]: Creation complete after 9s [id=corporacion-sales-prediction/roles/logging.admin/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
-[0m[1mgoogle_project_iam_member.composer_roles["roles/container.clusterViewer"]: Creation complete after 9s [id=corporacion-sales-prediction/roles/container.clusterViewer/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
-[0m[1mgoogle_project_iam_member.composer_roles["roles/composer.worker"]: Creation complete after 9s [id=corporacion-sales-prediction/roles/composer.worker/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
-[0m[1mgoogle_project_iam_member.composer_roles["roles/storage.admin"]: Still creating... [10s elapsed][0m[0m
-[0m[1mgoogle_project_iam_member.composer_roles["roles/compute.networkAdmin"]: Still creating... [10s elapsed][0m[0m
-[0m[1mgoogle_project_iam_member.composer_roles["roles/composer.admin"]: Still creating... [10s elapsed][0m[0m
-[0m[1mgoogle_project_iam_member.composer_roles["roles/artifactregistry.reader"]: Still creating... [10s elapsed][0m[0m
-[0m[1mgoogle_project_iam_member.composer_roles["roles/iam.serviceAccountAdmin"]: Still creating... [10s elapsed][0m[0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/storage.admin"]: Creation complete after 9s [id=corporacion-sales-prediction/roles/storage.admin/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
 [0m[1mgoogle_project_iam_member.composer_roles["roles/composer.admin"]: Creation complete after 10s [id=corporacion-sales-prediction/roles/composer.admin/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
-[0m[1mgoogle_project_iam_member.composer_roles["roles/artifactregistry.reader"]: Creation complete after 10s [id=corporacion-sales-prediction/roles/artifactregistry.reader/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
-[0m[1mgoogle_project_iam_member.composer_roles["roles/compute.networkAdmin"]: Creation complete after 10s [id=corporacion-sales-prediction/roles/compute.networkAdmin/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/container.clusterViewer"]: Creation complete after 10s [id=corporacion-sales-prediction/roles/container.clusterViewer/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/composer.worker"]: Creation complete after 10s [id=corporacion-sales-prediction/roles/composer.worker/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/artifactregistry.reader"]: Still creating... [10s elapsed][0m[0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/compute.networkAdmin"]: Still creating... [10s elapsed][0m[0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/iam.serviceAccountAdmin"]: Still creating... [10s elapsed][0m[0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/artifactregistry.reader"]: Creation complete after 11s [id=corporacion-sales-prediction/roles/artifactregistry.reader/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
 [0m[1mgoogle_project_iam_member.composer_roles["roles/iam.serviceAccountAdmin"]: Creation complete after 11s [id=corporacion-sales-prediction/roles/iam.serviceAccountAdmin/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
-[0m[1mgoogle_project_iam_member.composer_roles["roles/storage.admin"]: Creation complete after 11s [id=corporacion-sales-prediction/roles/storage.admin/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/compute.networkAdmin"]: Creation complete after 11s [id=corporacion-sales-prediction/roles/compute.networkAdmin/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mmodule.vpc_creation.module.vpc.google_compute_network.network: Refreshing state... [id=projects/corporacion-sales-prediction/global/networks/corpor-sales-vpc][0m
+[0m[1mgoogle_project_service.enable_resource_manager: Refreshing state... [id=corporacion-sales-prediction/cloudresourcemanager.googleapis.com][0m
+[0m[1mmodule.vpc_creation.module.subnets.google_compute_subnetwork.subnetwork["europe-west1/corpor-sales-subnet"]: Refreshing state... [id=projects/corporacion-sales-prediction/regions/europe-west1/subnetworks/corpor-sales-subnet][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["cloudresourcemanager.googleapis.com"]: Refreshing state... [id=corporacion-sales-prediction/cloudresourcemanager.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["compute.googleapis.com"]: Refreshing state... [id=corporacion-sales-prediction/compute.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["sqladmin.googleapis.com"]: Refreshing state... [id=corporacion-sales-prediction/sqladmin.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["storage.googleapis.com"]: Refreshing state... [id=corporacion-sales-prediction/storage.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["iam.googleapis.com"]: Refreshing state... [id=corporacion-sales-prediction/iam.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["composer.googleapis.com"]: Refreshing state... [id=corporacion-sales-prediction/composer.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["container.googleapis.com"]: Refreshing state... [id=corporacion-sales-prediction/container.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["servicenetworking.googleapis.com"]: Refreshing state... [id=corporacion-sales-prediction/servicenetworking.googleapis.com][0m
+[0m[1mtime_sleep.wait_for_composer_apis: Refreshing state... [id=2025-06-06T17:44:31Z][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/storage.admin"]: Refreshing state... [id=corporacion-sales-prediction/roles/storage.admin/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/composer.admin"]: Refreshing state... [id=corporacion-sales-prediction/roles/composer.admin/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/logging.admin"]: Refreshing state... [id=corporacion-sales-prediction/roles/logging.admin/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/iam.serviceAccountAdmin"]: Refreshing state... [id=corporacion-sales-prediction/roles/iam.serviceAccountAdmin/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/container.clusterViewer"]: Refreshing state... [id=corporacion-sales-prediction/roles/container.clusterViewer/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/composer.worker"]: Refreshing state... [id=corporacion-sales-prediction/roles/composer.worker/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/compute.networkAdmin"]: Refreshing state... [id=corporacion-sales-prediction/roles/compute.networkAdmin/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/artifactregistry.reader"]: Refreshing state... [id=corporacion-sales-prediction/roles/artifactregistry.reader/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  [32m+[0m create[0m
+
+Terraform will perform the following actions:
+
+[1m  # google_compute_firewall.allow_ingress_on_tcp[0m will be created
+[0m  [32m+[0m[0m resource "google_compute_firewall" "allow_ingress_on_tcp" {
+      [32m+[0m[0m creation_timestamp = (known after apply)
+      [32m+[0m[0m description        = "allow ingress traffic from within subnet to services listen on port 5432"
+      [32m+[0m[0m destination_ranges = (known after apply)
+      [32m+[0m[0m direction          = "INGRESS"
+      [32m+[0m[0m enable_logging     = (known after apply)
+      [32m+[0m[0m id                 = (known after apply)
+      [32m+[0m[0m name               = "allow-intra-to-tcp"
+      [32m+[0m[0m network            = "corpor-sales-subnet"
+      [32m+[0m[0m priority           = 1000
+      [32m+[0m[0m project            = "corporacion-sales-prediction"
+      [32m+[0m[0m self_link          = (known after apply)
+      [32m+[0m[0m source_ranges      = [
+          [32m+[0m[0m "10.0.0.0/16",
+        ]
+
+      [32m+[0m[0m allow {
+          [32m+[0m[0m ports    = [
+              [32m+[0m[0m "5432",
+            ]
+          [32m+[0m[0m protocol = "tcp"
+        }
+    }
+
+[1m  # google_compute_global_address.reserved_ip_for_psa[0m will be created
+[0m  [32m+[0m[0m resource "google_compute_global_address" "reserved_ip_for_psa" {
+      [32m+[0m[0m address            = (known after apply)
+      [32m+[0m[0m address_type       = "INTERNAL"
+      [32m+[0m[0m creation_timestamp = (known after apply)
+      [32m+[0m[0m effective_labels   = {
+          [32m+[0m[0m "goog-terraform-provisioned" = "true"
+        }
+      [32m+[0m[0m id                 = (known after apply)
+      [32m+[0m[0m label_fingerprint  = (known after apply)
+      [32m+[0m[0m name               = "psa-ips"
+      [32m+[0m[0m network            = "projects/corporacion-sales-prediction/global/networks/corpor-sales-vpc"
+      [32m+[0m[0m prefix_length      = 16
+      [32m+[0m[0m project            = "corporacion-sales-prediction"
+      [32m+[0m[0m purpose            = "VPC_PEERING"
+      [32m+[0m[0m self_link          = (known after apply)
+      [32m+[0m[0m terraform_labels   = {
+          [32m+[0m[0m "goog-terraform-provisioned" = "true"
+        }
+    }
+
+[1m  # google_service_networking_connection.private_connection_with_service_networking[0m will be created
+[0m  [32m+[0m[0m resource "google_service_networking_connection" "private_connection_with_service_networking" {
+      [32m+[0m[0m id                      = (known after apply)
+      [32m+[0m[0m network                 = "projects/corporacion-sales-prediction/global/networks/corpor-sales-vpc"
+      [32m+[0m[0m peering                 = (known after apply)
+      [32m+[0m[0m reserved_peering_ranges = [
+          [32m+[0m[0m "psa-ips",
+        ]
+      [32m+[0m[0m service                 = "servicenetworking.googleapis.com"
+    }
+
+[1mPlan:[0m 3 to add, 0 to change, 0 to destroy.
+[0m[0m[1mgoogle_compute_global_address.reserved_ip_for_psa: Creating...[0m[0m
+[0m[1mgoogle_compute_firewall.allow_ingress_on_tcp: Creating...[0m[0m
+[0m[1mgoogle_compute_global_address.reserved_ip_for_psa: Still creating... [10s elapsed][0m[0m
+[0m[1mgoogle_compute_global_address.reserved_ip_for_psa: Creation complete after 12s [id=projects/corporacion-sales-prediction/global/addresses/psa-ips][0m
+[0m[1mgoogle_service_networking_connection.private_connection_with_service_networking: Creating...[0m[0m
+[0m[1mgoogle_service_networking_connection.private_connection_with_service_networking: Still creating... [10s elapsed][0m[0m
+[0m[1mgoogle_service_networking_connection.private_connection_with_service_networking: Still creating... [20s elapsed][0m[0m
+[0m[1mgoogle_service_networking_connection.private_connection_with_service_networking: Still creating... [30s elapsed][0m[0m
+[0m[1mgoogle_service_networking_connection.private_connection_with_service_networking: Still creating... [40s elapsed][0m[0m
+[0m[1mgoogle_service_networking_connection.private_connection_with_service_networking: Still creating... [50s elapsed][0m[0m
+[0m[1mgoogle_service_networking_connection.private_connection_with_service_networking: Still creating... [1m0s elapsed][0m[0m
+[0m[1mgoogle_service_networking_connection.private_connection_with_service_networking: Creation complete after 1m4s [id=projects%2Fcorporacion-sales-prediction%2Fglobal%2Fnetworks%2Fcorpor-sales-vpc:servicenetworking.googleapis.com][0m
+[0m[1mmodule.vpc_creation.module.vpc.google_compute_network.network: Refreshing state... [id=projects/corporacion-sales-prediction/global/networks/corpor-sales-vpc][0m
+[0m[1mgoogle_project_service.enable_resource_manager: Refreshing state... [id=corporacion-sales-prediction/cloudresourcemanager.googleapis.com][0m
+[0m[1mmodule.vpc_creation.module.subnets.google_compute_subnetwork.subnetwork["europe-west1/corpor-sales-subnet"]: Refreshing state... [id=projects/corporacion-sales-prediction/regions/europe-west1/subnetworks/corpor-sales-subnet][0m
+[0m[1mgoogle_compute_global_address.reserved_ip_for_psa: Refreshing state... [id=projects/corporacion-sales-prediction/global/addresses/psa-ips][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["compute.googleapis.com"]: Refreshing state... [id=corporacion-sales-prediction/compute.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["composer.googleapis.com"]: Refreshing state... [id=corporacion-sales-prediction/composer.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["iam.googleapis.com"]: Refreshing state... [id=corporacion-sales-prediction/iam.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["sqladmin.googleapis.com"]: Refreshing state... [id=corporacion-sales-prediction/sqladmin.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["storage.googleapis.com"]: Refreshing state... [id=corporacion-sales-prediction/storage.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["cloudresourcemanager.googleapis.com"]: Refreshing state... [id=corporacion-sales-prediction/cloudresourcemanager.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["servicenetworking.googleapis.com"]: Refreshing state... [id=corporacion-sales-prediction/servicenetworking.googleapis.com][0m
+[0m[1mgoogle_project_service.enable_composer_required_apis["container.googleapis.com"]: Refreshing state... [id=corporacion-sales-prediction/container.googleapis.com][0m
+[0m[1mtime_sleep.wait_for_composer_apis: Refreshing state... [id=2025-06-06T17:44:31Z][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/container.clusterViewer"]: Refreshing state... [id=corporacion-sales-prediction/roles/container.clusterViewer/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/artifactregistry.reader"]: Refreshing state... [id=corporacion-sales-prediction/roles/artifactregistry.reader/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/storage.admin"]: Refreshing state... [id=corporacion-sales-prediction/roles/storage.admin/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/composer.admin"]: Refreshing state... [id=corporacion-sales-prediction/roles/composer.admin/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mgoogle_service_networking_connection.private_connection_with_service_networking: Refreshing state... [id=projects%2Fcorporacion-sales-prediction%2Fglobal%2Fnetworks%2Fcorpor-sales-vpc:servicenetworking.googleapis.com][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/compute.networkAdmin"]: Refreshing state... [id=corporacion-sales-prediction/roles/compute.networkAdmin/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/composer.worker"]: Refreshing state... [id=corporacion-sales-prediction/roles/composer.worker/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/logging.admin"]: Refreshing state... [id=corporacion-sales-prediction/roles/logging.admin/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+[0m[1mgoogle_project_iam_member.composer_roles["roles/iam.serviceAccountAdmin"]: Refreshing state... [id=corporacion-sales-prediction/roles/iam.serviceAccountAdmin/serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com][0m
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  [32m+[0m create[0m
+
+Terraform will perform the following actions:
+
+[1m  # google_compute_firewall.allow_ingress_on_tcp[0m will be created
+[0m  [32m+[0m[0m resource "google_compute_firewall" "allow_ingress_on_tcp" {
+      [32m+[0m[0m creation_timestamp = (known after apply)
+      [32m+[0m[0m description        = "allow ingress traffic from within subnet to services listen on port 5432"
+      [32m+[0m[0m destination_ranges = (known after apply)
+      [32m+[0m[0m direction          = "INGRESS"
+      [32m+[0m[0m enable_logging     = (known after apply)
+      [32m+[0m[0m id                 = (known after apply)
+      [32m+[0m[0m name               = "allow-intra-to-tcp"
+      [32m+[0m[0m network            = "corpor-sales-vpc"
+      [32m+[0m[0m priority           = 1000
+      [32m+[0m[0m project            = "corporacion-sales-prediction"
+      [32m+[0m[0m self_link          = (known after apply)
+      [32m+[0m[0m source_ranges      = [
+          [32m+[0m[0m "10.0.0.0/16",
+        ]
+
+      [32m+[0m[0m allow {
+          [32m+[0m[0m ports    = [
+              [32m+[0m[0m "5432",
+            ]
+          [32m+[0m[0m protocol = "tcp"
+        }
+    }
+
+[1mPlan:[0m 1 to add, 0 to change, 0 to destroy.
+[0m[0m[1mgoogle_compute_firewall.allow_ingress_on_tcp: Creating...[0m[0m
+[0m[1mgoogle_compute_firewall.allow_ingress_on_tcp: Still creating... [10s elapsed][0m[0m
+[0m[1mgoogle_compute_firewall.allow_ingress_on_tcp: Creation complete after 12s [id=projects/corporacion-sales-prediction/global/firewalls/allow-intra-to-tcp][0m
 [0m[1m[32m
-Apply complete! Resources: 17 added, 0 changed, 0 destroyed.
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 [0m
