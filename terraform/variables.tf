@@ -10,3 +10,7 @@ variable "umsa" {
   type        = string
   description = "user managed service account"
 }
+variable "project_nbr" {
+  type        = string
+  description = "project nbr number"
+}

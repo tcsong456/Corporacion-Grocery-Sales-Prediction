@@ -1,6 +1,6 @@
 locals {
 project_id         = "${var.project_id}"
-#project_nbr        = "${var.project_nbr}"
+project_nbr        = "${var.project_nbr}"
 region             = "${var.region}"
 umsa               = "${var.umsa}"
 umsa_fqn           = "${local.umsa}@${local.project_id}.iam.gserviceaccount.com"
@@ -55,6 +55,11 @@ resource "google_project_iam_member" "composer_roles" {
                 ]
 }
 
+resource "time_sleep" "wait_for_roles" {
+  create_duration = "120s"
+  depends_on = [google_project_iam_member.composer_roles]
+}
+
 module "vpc_creation" {
   source         = "terraform-google-modules/network/google"
   project_id     = local.project_id
@@ -81,6 +86,7 @@ module "vpc_creation" {
      ]
   
   }
+  depends_on = [time_sleep.wait_for_roles]
 }
 
 resource "google_compute_global_address" "reserved_ip_for_psa" {
@@ -117,15 +123,69 @@ resource "google_compute_firewall" "allow_ingress_on_tcp" {
          ports    = [5432]
   }
   description = "allow ingress traffic from within subnet to services listen on port 5432"
-  depends_on = [time_sleep.wait_for_composer_apis,
+  depends_on = [time_sleep.wait_for_roles,
                 module.vpc_creation]
 }
+
+resource "time_sleep" "wait_for_network_and_firewall_creation" {
+  create_duration = "120s"
+  depends_on = [module.vpc_creation,
+                google_compute_firewall.allow_ingress_on_tcp
+                  ]
+}
+
 
 resource "google_composer_environment" "cloud_composer_env_creation" {
   name   = "${local.project_id}-cc3"
   region = local.region
-  
+  provider  = google-beta
+  config {
+     software_config {
+         image_version = "composer-3-airflow-2.10.5"
+         env_variables = {
+              AIRFLOW_VAR_PROJECT_ID  = "${local.project_id}"
+              AIRFLOW_VAR_PROJECT_NBR = "${local.project_nbr}"
+              AIRFLOW_VAR_REGION      = "${local.region}"
+              AIRFLOW_VAR_SUBNET      = "corpor-sales-subnet"
+              AIRFLOW_VAR_UMSA_FQN    = "${local.umsa_fqn}"
+            }
+       }
+     workloads_config {
+        scheduler {
+          cpu        = 2    
+          memory_gb  = 4    
+          storage_gb = 20   
+          count      = 1  
+        }
+      
+        web_server {
+          cpu        = 1
+          memory_gb  = 2
+          storage_gb = 10
+        }
+      
+        worker {
+          cpu        = 4    
+          memory_gb  = 8    
+          storage_gb = 50   
+          min_count  = 3    
+          max_count  = 6   
+        }
+      }
+    environment_size = "ENVIRONMENT_SIZE_MEDIUM"
+    
+    node_config {
+      network    = "corpor-sales-vpc"
+      subnetwork = "corpor-sales-subnet"
+      service_account = local.umsa_fqn
+      ip_allocation_policy {
+        cluster_secondary_range_name  = "pods"
+        services_secondary_range_name = "services"
+        }
+      }
+  }
+  depends_on = [time_sleep.wait_for_roles,
+                time_sleep.wait_for_network_and_firewall_creation]
 }
-
 
 
