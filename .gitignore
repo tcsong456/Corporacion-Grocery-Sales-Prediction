@@ -7,6 +7,10 @@ __pycache__/
 key.json
 terraform/*
 !terraform/*.tf
+destroy_terraform.sh
+key.json
+kaggle.json
+data/*
 
 # C extensions
 *.so

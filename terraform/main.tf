@@ -13,6 +13,9 @@ composer_roles = [
   "roles/compute.networkAdmin",
   "roles/logging.admin",
   "roles/container.clusterViewer",
+  "roles/storage.objectAdmin",
+  "roles/storage.bucketCreator",
+  "roles/storage.objectCreator"
 ]
 composer_apis = [
     "cloudresourcemanager.googleapis.com",  # Required for IAM operations
@@ -29,14 +32,14 @@ composer_apis = [
 resource "google_project_service" "enable_resource_manager" {
   project = var.project_id
   service = "cloudresourcemanager.googleapis.com"
-  disable_on_destroy = false
+  disable_dependent_services = true
 }
 
 resource "google_project_service" "enable_composer_required_apis" {
   for_each = toset(local.composer_apis)
   project  = local.project_id
   service  = each.key
-  disable_on_destroy = true
+  disable_dependent_services = true
   depends_on = [google_project_service.enable_resource_manager]
 }
 

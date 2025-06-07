@@ -1,0 +1,18 @@
+FROM python:3.10-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  unzip \
+  p7zip-full \
+  dos2unix \
+  curl && \
+  rm -rf /var/lib/apt/lists/*
+
+RUN pip install kaggle
+
+WORKDIR /app
+COPY kaggle.json /root/.kaggle/kaggle.json
+COPY shell_scripts/data_download.sh .
+RUN dos2unix data_download.sh && \
+    chmod 600 /root/.kaggle/kaggle.json && \
+    chmod +x data_download.sh
+CMD ["./data_download.sh"]
