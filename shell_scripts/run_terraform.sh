@@ -5,6 +5,7 @@ GCP_REGION="europe-west1"
 UMSA="corpor-sales-sa"
 
 cd $(pwd)/terraform 
+#cd terraform
 terraform init
 
 terraform plan \

@@ -2,21 +2,41 @@ FROM python:3.10-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
   unzip \
+  jq \
   p7zip-full \
+  lsb-release \
   dos2unix \
-  google-cloud-sdk \
+  apt-transport-https \
+  ca-certificates \
+  gnupg \
   curl && \
-  rm -rf /var/lib/apt/lists/*
+  echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" > /etc/apt/sources.list.d/google-cloud-sdk.list \
+    && curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg \
+    && apt-get update && apt-get install -y google-cloud-sdk \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN pip install kaggle
+RUN pip install --no-cache-dir \ 
+    google-cloud-storage
+    
+RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" > /etc/apt/sources.list.d/hashicorp.list \
+    && apt-get update && apt-get install -y terraform \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY kaggle.json /root/.kaggle/kaggle.json
 COPY shell_scripts/data_download.sh .
 COPY shell_scripts/run_terraform.sh .
+COPY terraform/ ./terraform/
+COPY key.json .
+
+RUN gcloud auth activate-service-account --key-file=key.json && \
+    PROJECT_ID=$(jq -r '.project_id' key.json) && \
+    gcloud config set project "$PROJECT_ID"
 
 RUN dos2unix data_download.sh run_terraform.sh && \
     chmod 600 /root/.kaggle/kaggle.json && \
     chmod +x data_download.sh run_terraform.sh
-#CMD ["./data_download.sh"]
-CMD bash -c "./data_download.sh && ./run_terraform.sh"
+    
+ENTRYPOINT ["bash","-c"]
+CMD ["./data_download.sh && ./run_terraform.sh"]

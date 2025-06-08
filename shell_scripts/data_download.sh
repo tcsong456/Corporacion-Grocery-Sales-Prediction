@@ -23,4 +23,3 @@ rm data/$files
 for f in data/*.7z;do
   7z x "$f" -o"data/" > /dev/null && rm -f "$f"
 done
-ls -a data

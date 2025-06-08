@@ -14,7 +14,6 @@ composer_roles = [
   "roles/logging.admin",
   "roles/container.clusterViewer",
   "roles/storage.objectAdmin",
-  "roles/storage.bucketCreator",
   "roles/storage.objectCreator"
 ]
 composer_apis = [
