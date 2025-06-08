@@ -137,6 +137,27 @@ resource "time_sleep" "wait_for_network_and_firewall_creation" {
                   ]
 }
 
+resource "google_storage_bucket" "corpor_sales_bucket_creation" {
+  project                       = local.project_id
+  name                          = "corpor-sales-data"
+  location                      = local.region
+  uniform_bucket_level_access   = true
+  force_destroy                 = true
+  depends_on = [time_sleep.wait_for_network_and_firewall_creation]
+} 
+
+resource "time_sleep" "sleep_after_buckets_creation" {
+  create_duration = "60s"
+  depends_on = [google_storage_bucket.corpor_sales_bucket_creation]
+}
+
+resource "google_storage_bucket_object" "corpor_datasets_upload_to_gcs" {
+  for_each = fileset("../data/","*")
+  source   = "../data/${each.value}"
+  name     = "${each.value}"
+  bucket   = google_storage_bucket.corpor_sales_bucket_creation.name
+  depends_on = [time_sleep.sleep_after_buckets_creation]
+}
 
 resource "google_composer_environment" "cloud_composer_env_creation" {
   name   = "${local.project_id}-cc3"
