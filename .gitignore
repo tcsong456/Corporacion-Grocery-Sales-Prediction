@@ -11,6 +11,7 @@ destroy_terraform.sh
 key.json
 kaggle.json
 data/*
+EDA/*
 
 # C extensions
 *.so
