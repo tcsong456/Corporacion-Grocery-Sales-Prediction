@@ -5,25 +5,25 @@ Created on Wed Jun 11 16:19:02 2025
 @author: congx
 """
 from google.cloud import storage
-from google.oauth2 import service_account
+# from google.oauth2 import service_account
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import when,col,log1p,to_date
 from pyspark.sql.types import FloatType,IntegerType,ByteType
 
-bucket_name = "corpor-sales-bucket"
+bucket_name = "corpor-sales-data"
 train_bucket = "gs://" + bucket_name + "/train.csv"
-credential_key_path = "D:/machine_learning/projects/Corporacion-Grocery-Sales-Prediction/key.json"
+# credential_key_path = "D:/machine_learning/projects/Corporacion-Grocery-Sales-Prediction/key.json"
 
-# spark = SparkSession.builder.appName('corpor_data_processing').getOrCreate()
+spark = SparkSession.builder.appName('corpor_data_processing').getOrCreate()
 # 
-spark = SparkSession.builder \
-    .appName("GCS Example") \
-    .config("spark.jars", "file:///D:/utils/gcs-connector-hadoop3-latest.jar") \
-    .config("spark.hadoop.fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem") \
-    .config("spark.hadoop.fs.AbstractFileSystem.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS") \
-    .config("spark.hadoop.google.cloud.auth.service.account.enable", "true") \
-    .config("spark.hadoop.google.cloud.auth.service.account.json.keyfile",credential_key_path) \
-    .getOrCreate()
+# spark = SparkSession.builder \
+#     .appName("GCS Example") \
+#     .config("spark.jars", "file:///D:/utils/gcs-connector-hadoop3-latest.jar") \
+#     .config("spark.hadoop.fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem") \
+#     .config("spark.hadoop.fs.AbstractFileSystem.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS") \
+#     .config("spark.hadoop.google.cloud.auth.service.account.enable", "true") \
+#     .config("spark.hadoop.google.cloud.auth.service.account.json.keyfile",credential_key_path) \
+#     .getOrCreate()
 spark.sparkContext.setLogLevel("ERROR")
 train = spark.read.format("csv").option("header",True).option("inferschema",True).load(train_bucket)
 min_value = 0
@@ -42,10 +42,11 @@ train.coalesce(1).write \
       .format("csv") \
       .option("header", True) \
       .mode("overwrite") \
-      .save("gs://corpor-sales-bucket/train/")
+      .save("gs://corpor-sales-data/train/")
 
-credentials = service_account.Credentials.from_service_account_file(credential_key_path)
-client = storage.Client(credentials=credentials)
+# credentials = service_account.Credentials.from_service_account_file(credential_key_path)
+# client = storage.Client(credentials=credentials)
+client = storage.Client()
 bucket = client.bucket(bucket_name)
 blobs = list(bucket.list_blobs(prefix='train/'))
 for blob in blobs:

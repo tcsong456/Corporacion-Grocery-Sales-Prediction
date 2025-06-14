@@ -5,8 +5,10 @@ region             = "${var.region}"
 umsa               = "${var.umsa}"
 umsa_fqn           = "${local.umsa}@${local.project_id}.iam.gserviceaccount.com"
 composer_roles = [
+  "roles/dataproc.worker",
   "roles/composer.worker",
   "roles/composer.admin",
+  "roles/dataproc.editor",
   "roles/iam.serviceAccountAdmin",
   "roles/storage.admin",
   "roles/artifactregistry.reader",
@@ -17,6 +19,7 @@ composer_roles = [
   "roles/storage.objectCreator"
 ]
 composer_apis = [
+    "dataproc.googleapis.com",
     "cloudresourcemanager.googleapis.com",  # Required for IAM operations
     "composer.googleapis.com",             # Cloud Composer API
     "compute.googleapis.com",              # Compute Engine API
@@ -114,51 +117,120 @@ resource "google_service_networking_connection" "private_connection_with_service
                 ]
 }
 
-resource "google_compute_firewall" "allow_ingress_on_tcp" {
+resource "google_compute_firewall" "allow_ingress_on_all" {
   project = local.project_id
-  name    = "allow-intra-to-tcp"
+  name    = "allow-intra-to-all"
   network = "corpor-sales-vpc"
   direction = "INGRESS"
   source_ranges = ["10.0.0.0/16"]
   allow {
-         protocol = "tcp"
-         ports    = [5432]
+         protocol = "all"
   }
-  description = "allow ingress traffic from within subnet to services listen on port 5432"
+  priority = 100
+  description = "allow ingress traffic from within subnet to services on all ports and protocols"
   depends_on = [time_sleep.wait_for_roles,
                 module.vpc_creation]
 }
 
+resource "google_compute_firewall" "allow_egress_on_all" {
+  name    = "allow-egress-internal"
+  network = "corpor-sales-vpc"
+  direction = "EGRESS"
+  destination_ranges = ["10.0.0.0/16"]
+  allow {
+    protocol = "all"
+  }
+  priority = 100
+  description = "Allow egress to internal network"
+  depends_on = [time_sleep.wait_for_roles,
+                module.vpc_creation]
+}
+
+resource "google_compute_firewall" "allow_egress_on_google_apis" {
+  name    = "allow-google-apis-egress"
+  network = "corpor-sales-vpc"
+  direction = "EGRESS"
+  destination_ranges = ["199.36.153.8/30"]
+  allow {
+    protocol = "all"
+  }
+  priority    = 110
+  description = "Allow egress to Google APIs"
+  depends_on = [time_sleep.wait_for_roles,
+                module.vpc_creation]
+}
+
+
 resource "time_sleep" "wait_for_network_and_firewall_creation" {
   create_duration = "120s"
   depends_on = [module.vpc_creation,
-                google_compute_firewall.allow_ingress_on_tcp
+                google_compute_firewall.allow_ingress_on_all,
+                google_compute_firewall.allow_egress_on_all,
+                google_compute_firewall.allow_egress_on_google_apis
                   ]
 }
 
-resource "google_storage_bucket" "corpor_sales_bucket_creation" {
+resource "google_storage_bucket" "corpor_data_bucket_creation" {
   project                       = local.project_id
   name                          = "corpor-sales-data"
   location                      = local.region
   uniform_bucket_level_access   = true
   force_destroy                 = true
   depends_on = [time_sleep.wait_for_network_and_firewall_creation]
-} 
+}
+
+resource "google_storage_bucket" "corpor_lib_bucket_creation" {
+  project                       = local.project_id
+  name                          = "corpor-sales-lib"
+  location                      = local.region
+  uniform_bucket_level_access   = true
+  force_destroy                 = true
+  depends_on = [time_sleep.wait_for_network_and_firewall_creation]
+}
+
+resource "google_storage_bucket" "corpor_scripts_bucket_creation" {
+  project                       = local.project_id
+  name                          = "corpor-sales-scripts"
+  location                      = local.region
+  uniform_bucket_level_access   = true
+  force_destroy                 = true
+  depends_on = [time_sleep.wait_for_network_and_firewall_creation]
+}
 
 resource "time_sleep" "sleep_after_buckets_creation" {
   create_duration = "60s"
-  depends_on = [google_storage_bucket.corpor_sales_bucket_creation]
+  depends_on = [google_storage_bucket.corpor_data_bucket_creation,
+                google_storage_bucket.corpor_lib_bucket_creation,
+                google_storage_bucket.corpor_scripts_bucket_creation]
 }
 
 resource "google_storage_bucket_object" "corpor_datasets_upload_to_gcs" {
   for_each = fileset("../data/","*")
   source   = "../data/${each.value}"
   name     = "${each.value}"
-  bucket   = google_storage_bucket.corpor_sales_bucket_creation.name
+  bucket   = google_storage_bucket.corpor_data_bucket_creation.name
   depends_on = [time_sleep.sleep_after_buckets_creation]
 }
 
-resource "google_composer_environment" "cloud_composer_env_creation" {
+resource "null_resource" "download_and_upload_gcs_connector" {
+  provisioner "local-exec" {
+    command = <<EOT
+      wget -O gcs-connector-hadoop3-latest.jar "https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop3-latest.jar" &&
+      gsutil cp gcs-connector-hadoop3-latest.jar "gs://${google_storage_bucket.corpor_lib_bucket_creation.name}/libs/"
+    EOT
+   interpreter = ["bash","-c"]
+  }
+  depends_on = [time_sleep.sleep_after_buckets_creation]
+}
+
+resource "google_storage_bucket_object" "train_data_process_script_upload" {
+  name = "preprocess/train_data_process.py"
+  source = "../preprocessing/train_data_process.py"
+  bucket = google_storage_bucket.corpor_scripts_bucket_creation.name
+  depends_on = [time_sleep.sleep_after_buckets_creation]
+}
+
+resource "google_composer_environment" "cc3_env_creation" {
   name   = "${local.project_id}-cc3"
   region = local.region
   provider  = google-beta
@@ -166,11 +238,10 @@ resource "google_composer_environment" "cloud_composer_env_creation" {
      software_config {
          image_version = "composer-3-airflow-2.10.5"
          env_variables = {
-              AIRFLOW_VAR_PROJECT_ID  = "${local.project_id}"
-              AIRFLOW_VAR_PROJECT_NBR = "${local.project_nbr}"
-              AIRFLOW_VAR_REGION      = "${local.region}"
-              AIRFLOW_VAR_SUBNET      = "corpor-sales-subnet"
-              AIRFLOW_VAR_UMSA_FQN    = "${local.umsa_fqn}"
+#              PROJECT_ID  = "${local.project_id}"
+#              REGION      = "${local.region}"
+              SUBNET_NM   = "corpor-sales-subnet"
+              UMSA        = "${local.umsa}"
             }
        }
      workloads_config {
@@ -211,4 +282,17 @@ resource "google_composer_environment" "cloud_composer_env_creation" {
                 time_sleep.wait_for_network_and_firewall_creation]
 }
 
+resource "time_sleep" "sleep_after_composer_creation" {
+  create_duration = "180s"
+  depends_on = [google_composer_environment.cc3_env_creation]
+}
+/*
+resource "google_storage_bucket_object" "upload_dag_to_cc3" {
+  name    = "dags/airflow.py"
+  source  = "../preprocessing/airflow.py"
+  bucket  = substr(substr(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix,5,length(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix)),0, \
+                   (length(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix)-5))
+  depends_on = [time_sleep.sleep_after_composer_creation]
+}
+*/
 

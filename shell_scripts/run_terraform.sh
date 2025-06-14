@@ -6,6 +6,7 @@ UMSA="corpor-sales-sa"
 
 cd $(pwd)/terraform 
 #cd terraform
+sed -i 's/\r$//' main.tf
 terraform init
 
 terraform plan \
