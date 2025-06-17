@@ -12,6 +12,7 @@ key.json
 kaggle.json
 data/*
 EDA/*
+preprocessing/dummy_test.py
 
 # C extensions
 *.so

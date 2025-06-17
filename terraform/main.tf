@@ -230,6 +230,27 @@ resource "google_storage_bucket_object" "train_data_process_script_upload" {
   depends_on = [time_sleep.sleep_after_buckets_creation]
 }
 
+resource "google_storage_bucket_object" "train_test_concat_script_upload" {
+  name     = "preprocess/train_test_concat.py"
+  source   = "../preprocessing/train_test_concat.py"
+  bucket = google_storage_bucket.corpor_scripts_bucket_creation.name
+  depends_on = [time_sleep.sleep_after_buckets_creation]
+}
+
+resource "google_storage_bucket_object" "missing_values_fill_script_upload" {
+  name     = "preprocess/missing_values_fill.py"
+  source   = "../preprocessing/missing_values_fill.py"
+  bucket = google_storage_bucket.corpor_scripts_bucket_creation.name
+  depends_on = [time_sleep.sleep_after_buckets_creation]
+}
+
+resource "google_storage_bucket_object" "merge_store_item_script_upload" {
+  name     = "preprocess/merge_store_item.py"
+  source   = "../preprocessing/merge_store_item.py"
+  bucket = google_storage_bucket.corpor_scripts_bucket_creation.name
+  depends_on = [time_sleep.sleep_after_buckets_creation]
+}
+
 resource "google_composer_environment" "cc3_env_creation" {
   name   = "${local.project_id}-cc3"
   region = local.region
@@ -238,8 +259,8 @@ resource "google_composer_environment" "cc3_env_creation" {
      software_config {
          image_version = "composer-3-airflow-2.10.5"
          env_variables = {
-#              PROJECT_ID  = "${local.project_id}"
-#              REGION      = "${local.region}"
+              GCP_PROJECT_ID  = "${local.project_id}"
+              GCP_REGION      = "${local.region}"
               SUBNET_NM   = "corpor-sales-subnet"
               UMSA        = "${local.umsa}"
             }
