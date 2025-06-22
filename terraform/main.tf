@@ -225,28 +225,35 @@ resource "null_resource" "download_and_upload_gcs_connector" {
 
 resource "google_storage_bucket_object" "train_data_process_script_upload" {
   name = "preprocess/train_data_process.py"
-  source = "../preprocessing/train_data_process.py"
+  source = "../data_preprocess/train_data_process.py"
   bucket = google_storage_bucket.corpor_scripts_bucket_creation.name
   depends_on = [time_sleep.sleep_after_buckets_creation]
 }
 
 resource "google_storage_bucket_object" "train_test_concat_script_upload" {
   name     = "preprocess/train_test_concat.py"
-  source   = "../preprocessing/train_test_concat.py"
+  source   = "../data_preprocess/train_test_concat.py"
   bucket = google_storage_bucket.corpor_scripts_bucket_creation.name
   depends_on = [time_sleep.sleep_after_buckets_creation]
 }
 
-resource "google_storage_bucket_object" "missing_values_fill_script_upload" {
-  name     = "preprocess/missing_values_fill.py"
-  source   = "../preprocessing/missing_values_fill.py"
+resource "google_storage_bucket_object" "unit_sales_nan_fill_script_upload" {
+  name     = "preprocess/unit_sales_nan_fill.py"
+  source   = "../data_preprocess/unit_sales_nan_fill.py"
   bucket = google_storage_bucket.corpor_scripts_bucket_creation.name
   depends_on = [time_sleep.sleep_after_buckets_creation]
 }
 
-resource "google_storage_bucket_object" "merge_store_item_script_upload" {
-  name     = "preprocess/merge_store_item.py"
-  source   = "../preprocessing/merge_store_item.py"
+resource "google_storage_bucket_object" "promo_nan_fill_script_upload" {
+  name     = "preprocess/promo_nan_fill.py"
+  source   = "../data_preprocess/promo_nan_fill.py"
+  bucket = google_storage_bucket.corpor_scripts_bucket_creation.name
+  depends_on = [time_sleep.sleep_after_buckets_creation]
+}
+
+resource "google_storage_bucket_object" "final_process_script_upload" {
+  name     = "preprocess/final_process.py"
+  source   = "../data_preprocess/final_process.py"
   bucket = google_storage_bucket.corpor_scripts_bucket_creation.name
   depends_on = [time_sleep.sleep_after_buckets_creation]
 }
@@ -307,13 +314,13 @@ resource "time_sleep" "sleep_after_composer_creation" {
   create_duration = "180s"
   depends_on = [google_composer_environment.cc3_env_creation]
 }
-/*
+
 resource "google_storage_bucket_object" "upload_dag_to_cc3" {
   name    = "dags/airflow.py"
-  source  = "../preprocessing/airflow.py"
+  source  = "../data_preprocess/airflow.py"
   bucket  = substr(substr(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix,5,length(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix)),0, \
                    (length(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix)-5))
   depends_on = [time_sleep.sleep_after_composer_creation]
 }
-*/
+
 

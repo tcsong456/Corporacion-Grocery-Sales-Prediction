@@ -1,0 +1,19 @@
+FROM node:18-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  jq \
+  gnupg \
+  dos2unix \
+  ca-certificates \
+  curl && \
+  echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" > /etc/apt/sources.list.d/google-cloud-sdk.list \
+    && curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg \
+    && apt-get update && apt-get install -y google-cloud-sdk \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+RUN npm install -g @dataform/cli
+COPY key.json .
+COPY shell_scripts/run_dataform.sh .
+RUN dos2unix run_dataform.sh
+CMD ["/bin/sh","./run_dataform.sh"]

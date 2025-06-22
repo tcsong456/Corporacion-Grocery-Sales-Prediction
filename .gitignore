@@ -13,6 +13,7 @@ kaggle.json
 data/*
 EDA/*
 preprocessing/dummy_test.py
+trash/*
 
 # C extensions
 *.so
