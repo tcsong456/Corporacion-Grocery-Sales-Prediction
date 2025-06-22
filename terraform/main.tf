@@ -10,24 +10,25 @@ composer_roles = [
   "roles/composer.admin",
   "roles/dataproc.editor",
   "roles/iam.serviceAccountAdmin",
-  "roles/storage.admin",
   "roles/artifactregistry.reader",
   "roles/compute.networkAdmin",
   "roles/logging.admin",
   "roles/container.clusterViewer",
   "roles/storage.objectAdmin",
-  "roles/storage.objectCreator"
+  "roles/storage.objectCreator",
+  "roles/bigquery.dataEditor",
+  "roles/bigquery.jobUser"
 ]
 composer_apis = [
     "dataproc.googleapis.com",
-    "cloudresourcemanager.googleapis.com",  # Required for IAM operations
     "composer.googleapis.com",             # Cloud Composer API
     "compute.googleapis.com",              # Compute Engine API
     "storage.googleapis.com",              # Cloud Storage API
     "iam.googleapis.com",                  # IAM API
     "container.googleapis.com",            # Kubernetes Engine API
     "sqladmin.googleapis.com",           # Cloud SQL API (if using Airflow database)
-    "servicenetworking.googleapis.com"
+    "servicenetworking.googleapis.com",
+    "bigquery.googleapis.com"
   ]
 }
 
@@ -159,7 +160,6 @@ resource "google_compute_firewall" "allow_egress_on_google_apis" {
   depends_on = [time_sleep.wait_for_roles,
                 module.vpc_creation]
 }
-
 
 resource "time_sleep" "wait_for_network_and_firewall_creation" {
   create_duration = "120s"
@@ -337,7 +337,7 @@ resource "google_bigquery_table" "bq_sales_table_creation" {
   table_id   = "corpor_sales_prediction_table"
   external_data_configuration {
       autodetect = true
-      source_format = ".PARQUET"
+      source_format = "PARQUET"
       source_uris = ["gs://corpor-sales-data/df_sales_long/*.parquet"]
   }
 }
@@ -347,7 +347,7 @@ resource "google_bigquery_table" "bq_promo_table_creation" {
   table_id   = "corpor_promo_prediction_table"
   external_data_configuration {
       autodetect = true
-      source_format = ".PARQUET"
+      source_format = "PARQUET"
       source_uris = ["gs://corpor-sales-data/df_promo_long/*.parquet"]
   }
 }

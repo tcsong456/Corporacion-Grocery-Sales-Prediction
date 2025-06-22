@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 dataform_folder="corpor_sales_dataform"
 PROJECT_ID=$(jq -r '.project_id' ./key.json)
 gcloud auth activate-service-account --key-file=./key.json
