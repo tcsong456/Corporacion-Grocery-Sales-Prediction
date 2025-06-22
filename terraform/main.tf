@@ -316,11 +316,39 @@ resource "time_sleep" "sleep_after_composer_creation" {
 }
 
 resource "google_storage_bucket_object" "upload_dag_to_cc3" {
-  name    = "dags/airflow.py"
-  source  = "../data_preprocess/airflow.py"
+  name    = "dags/data_airflow.py"
+  source  = "../data_preprocess/data_airflow.py"
   bucket  = substr(substr(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix,5,length(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix)),0, \
-                   (length(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix)-5))
+                   (length(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix)-10))
   depends_on = [time_sleep.sleep_after_composer_creation]
 }
 
+resource "google_bigquery_dataset" "bq_dataset_creation" {
+  dataset_id                  = "corpor_sales_prediction_dataset"
+  location                    = local.region
+  lifecycle {
+    ignore_changes = [labels]
+    create_before_destroy = true
+  }
+}
+
+resource "google_bigquery_table" "bq_sales_table_creation" {
+  dataset_id = google_bigquery_dataset.bq_dataset_creation.dataset_id
+  table_id   = "corpor_sales_prediction_table"
+  external_data_configuration {
+      autodetect = true
+      source_format = ".PARQUET"
+      source_uris = ["gs://corpor-sales-data/df_sales_long/*.parquet"]
+  }
+}
+
+resource "google_bigquery_table" "bq_promo_table_creation" {
+  dataset_id = google_bigquery_dataset.bq_dataset_creation.dataset_id
+  table_id   = "corpor_promo_prediction_table"
+  external_data_configuration {
+      autodetect = true
+      source_format = ".PARQUET"
+      source_uris = ["gs://corpor-sales-data/df_promo_long/*.parquet"]
+  }
+}
 
