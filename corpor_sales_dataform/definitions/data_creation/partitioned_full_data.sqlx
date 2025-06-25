@@ -1,0 +1,11 @@
+config {
+    type: "table",
+    bigquery: {
+        partitionBy: "date",
+        requirePartitionFilter: true,
+        clusterBy: ["store_nbr","item_nbr"]
+    }
+}
+
+SELECT *
+FROM ${ref("full_data")}

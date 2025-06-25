@@ -1,0 +1,7 @@
+config { type: "table" }
+SELECT a.*,b.onpromotion FROM (
+SELECT * FROM ${ref("sales_data_table")}) AS a
+JOIN
+(
+SELECT * FROM ${ref("promo_data_table")}) AS b
+ON a.store_nbr = b.store_nbr AND a.item_nbr = b.item_nbr AND a.date = b.date

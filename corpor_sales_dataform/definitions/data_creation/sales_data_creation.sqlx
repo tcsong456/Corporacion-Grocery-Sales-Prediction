@@ -1,0 +1,11 @@
+config {
+  type: "operations",
+  hasOutput: true,
+  name: "sales_data_table"
+}
+
+CREATE OR REPLACE EXTERNAL TABLE ${self()}
+OPTIONS (
+  format = 'PARQUET',
+  uris = ['gs://corpor-sales-data/df_sales_long/*.parquet']
+);

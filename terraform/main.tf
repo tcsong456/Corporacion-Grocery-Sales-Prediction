@@ -15,6 +15,7 @@ composer_roles = [
   "roles/logging.admin",
   "roles/container.clusterViewer",
   "roles/storage.objectAdmin",
+  "roles/storage.objectViewer",
   "roles/storage.objectCreator",
   "roles/bigquery.dataEditor",
   "roles/bigquery.jobUser"
@@ -331,7 +332,7 @@ resource "google_bigquery_dataset" "bq_dataset_creation" {
     create_before_destroy = true
   }
 }
-
+/*
 resource "google_bigquery_table" "bq_sales_table_creation" {
   dataset_id = google_bigquery_dataset.bq_dataset_creation.dataset_id
   table_id   = "corpor_sales_prediction_table"
@@ -351,4 +352,4 @@ resource "google_bigquery_table" "bq_promo_table_creation" {
       source_uris = ["gs://corpor-sales-data/df_promo_long/*.parquet"]
   }
 }
-
+*/

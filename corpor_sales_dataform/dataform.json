@@ -1,7 +1,0 @@
-  {
-    "warehouse":"bigquery",
-    "defaultSchema":"corpor_sales_prediction_dataset",
-    "defaultDadabase":"corporacion-sales-prediction",
-    "defaultLocation":"europe-west1",
-    "assertionSchema":"dataform_assertions"
-      }
