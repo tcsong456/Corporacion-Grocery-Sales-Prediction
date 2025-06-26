@@ -1,4 +1,4 @@
-config { type: "table" }
+config { type: "view" }
 SELECT a.*,b.onpromotion FROM (
 SELECT * FROM ${ref("sales_data_table")}) AS a
 JOIN
