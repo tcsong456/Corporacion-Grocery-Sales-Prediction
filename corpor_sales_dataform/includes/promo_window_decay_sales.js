@@ -5,7 +5,7 @@ function promo_decay_window(targetDate,window_sizes,decay_rate,promoCondition,re
                                                 ${keyColumns},
                                                 SUM(CASE WHEN onpromotion ${promoCondition} THEN unit_sales ELSE NULL END
                                                     * POWER(${decay_rate},DATE_DIFF(DATE('${targetDate}'),date,DAY)-1))
-                                                AS sales_decay_SUM,
+                                                AS sales_decay_sum,
                                                 ${w} AS source
                                                 FROM ${refTable}
                                                 WHERE date BETWEEN DATE_SUB(DATE('${targetDate}'),INTERVAL ${w} DAY)
@@ -15,7 +15,7 @@ function promo_decay_window(targetDate,window_sizes,decay_rate,promoCondition,re
                                                 ).join("\nUNION ALL\n");
     const columns = window_sizes.map(w => `
                                             MAX(CASE WHEN source=${w} THEN
-                                            sales_decay_mean END) AS ${promoFlag}_sales_decay_mean_${w}`
+                                            sales_decay_sum END) AS ${promoFlag}_sales_decay_sum_${w}`
                                             ).join(",\n");    
                                         
     return `WITH decay_window_sales_table AS 
