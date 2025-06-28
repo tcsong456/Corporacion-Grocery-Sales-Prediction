@@ -1,16 +1,16 @@
-function promo_decay_window(targetDate,window_sizes,decay_rate,promoCondition,refTable) {
+function promo_decay_window(targetDate,window_sizes,decay_rate,promoCondition,refTable,keyCols) {
     const promoFlag = promoCondition === "=1" ? "promo" : "no_promo";
+    const keyColumns = keyCols.join(", ");
     const features = window_sizes.map(w => `SELECT
-                                                store_nbr,
-                                                item_nbr,
-                                                AVG(CASE WHEN onpromotion ${promoCondition} THEN unit_sales ELSE NULL END
+                                                ${keyColumns},
+                                                SUM(CASE WHEN onpromotion ${promoCondition} THEN unit_sales ELSE NULL END
                                                     * POWER(${decay_rate},DATE_DIFF(DATE('${targetDate}'),date,DAY)-1))
-                                                AS sales_decay_mean,
+                                                AS sales_decay_SUM,
                                                 ${w} AS source
                                                 FROM ${refTable}
                                                 WHERE date BETWEEN DATE_SUB(DATE('${targetDate}'),INTERVAL ${w} DAY)
                                                 AND DATE_SUB(DATE('${targetDate}'),INTERVAL 1 DAY)
-                                                GROUP BY store_nbr,item_nbr
+                                                GROUP BY ${keyColumns}
                                                 `
                                                 ).join("\nUNION ALL\n");
     const columns = window_sizes.map(w => `
@@ -21,11 +21,10 @@ function promo_decay_window(targetDate,window_sizes,decay_rate,promoCondition,re
     return `WITH decay_window_sales_table AS 
             (${features})
             SELECT
-            store_nbr,
-            item_nbr,
+            ${keyColumns},
             ${columns}
             FROM decay_window_sales_table
-            GROUP BY store_nbr,item_nbr
+            GROUP BY ${keyColumns}
             `;
 }
 

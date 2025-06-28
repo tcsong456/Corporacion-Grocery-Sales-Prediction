@@ -6,9 +6,10 @@ const promo_conditions = ["=1","=0"];
 promo_conditions.forEach(promoCondition => {
                          const promoFlag = promoCondition==="=1" ? "has_promo" : "no_promo";
                          dates.forEach(date => {
-                                const viewName =  `${promoFlag}_sales_decay_mean_${date.replace(/-/g,'')}`
+                                const viewName =  `${promoFlag}_sales_decay_sum_${date.replace(/-/g,'')}`
                                 publish(viewName,{type: "view"}).query(ctx =>
-                                                                       promo_decay_window(date,windows,0.95,promoCondition,
-                                                                       ctx.ref("partitioned_full_data")));
+                                                                       promo_decay_window(date,windows,0.9,promoCondition,
+                                                                       ctx.ref("partitioned_full_data"),
+                                                                       ["store_nbr","item_nbr"]));
     });
 });
