@@ -5,7 +5,7 @@ function rolling_window_stats(targetDate,window_sizes,decay_rate,keyCols,refTabl
                                              MIN(unit_sales) AS unit_sales_min,
                                              MAX(unit_sales) AS unit_sales_max,
                                              AVG(unit_sales) AS unit_sales_mean,
-                                             PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY unit_sales) AS unit_sales_median,
+                                             APPROX_QUANTILES(unit_sales,2)[OFFSET(1)] AS unit_sales_median,
                                              STDDEV_SAMP(unit_sales) AS unit_sales_std,
                                              SUM(unit_sales *
                                              POWER(${decay_rate},DATE_DIFF(DATE('${targetDate}'),date,DAY)-1)) AS unit_sales_decay_sum,
