@@ -5,7 +5,7 @@ const groups = [["item_nbr"],["class","store_nbr"],["store_nbr","item_nbr"]];
 
 groups.forEach(group => {
     dates.forEach(date => {
-        const viewNmae = `promo_sum_${date.replace(/-/g,'')}`;
+        const viewName = `promo_sum_${date.replace(/-/g,'')}`;
         publish(viewName,{type:"view"}).query(ctx => promo_window_sum(date,windows,group,
                                                                       ctx.ref("partitioned_full_data"))
         );
