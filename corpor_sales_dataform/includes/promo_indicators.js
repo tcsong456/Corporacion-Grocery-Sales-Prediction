@@ -1,5 +1,6 @@
 function promo_window_sum(targetDate,windows,keyCols,refTable) {
-    const windowList = `[${ windows.join(",") }]`;
+    const windowList = `[${ windows.join(",") }]`];
+    const dynamicSelectCols = keyCols.map(k => `b.${k}`).join(",")
     const pivotAlias = windows.map(w => {
                                         const alias = w >=0 ? `past_${w}` : `future_${Math.abs(w)}`;
                                         return `${w} AS ${alias}`;
@@ -9,20 +10,20 @@ function promo_window_sum(targetDate,windows,keyCols,refTable) {
                 SELECT
                 DATE('${targetDate}') AS target_date,
                 w AS window_size,
-                CASE WHEN  wl >=0 THEN DATE_SUB(DATE('${targetDate}'),INTERVAL w DAY)
+                CASE WHEN  w >=0 THEN DATE_SUB(DATE('${targetDate}'),INTERVAL w DAY)
                                   ELSE DATE_SUB(DATE('${targetDate}'),INTERVAL 1 DAY) END AS window_start,
-                CASE WHEN wl < 0 THEN DATE_SUB(DATE('${targetDate}'),INTERVAL 1 DAY)
+                CASE WHEN w < 0 THEN DATE_SUB(DATE('${targetDate}'),INTERVAL 1 DAY)
                                  ELSE DATE_ADD(DATE('${targetDate}'),INTERVAL ABS(w) DAY) END AS window_end
                 FROM UNNEST(${windowList}) AS w
                 ),
                 df AS(
                 SELECT
-                keyCols.map(k => b.${k}).join(","),
+                ${dynamicSelectCols},
                 b.onpromotion,
                 a.window_size
                 FROM
                 date_windows AS a JOIN
-                ref{refTable} AS b ON
+                ${refTable} AS b ON
                 b.date BETWEEN a.window_start AND a.window_end
                 )
                 SELECT
