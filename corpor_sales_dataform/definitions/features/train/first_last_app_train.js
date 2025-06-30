@@ -5,7 +5,7 @@ const groups = [["item_nbr"],["class","store_nbr"],["store_nbr","item_nbr"]];
 const target_cols = ['unit_sales','onpromotion']
 
 target_cols.forEach(targetcol=>{
-    const targetFlag = targecol==='unit_sales' ? 'sales' : 'promo';
+    const targetFlag = targetcol==='unit_sales' ? 'sales' : 'promo';
     groups.forEach(group => {
         dates.forEach(date => {
             const prefix = group.map(g=>g.replace(/_nbr$/,'')).join("_");
