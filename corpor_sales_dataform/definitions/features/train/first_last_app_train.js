@@ -9,7 +9,7 @@ target_cols.forEach(targetcol=>{
     groups.forEach(group => {
         dates.forEach(date => {
             const prefix = group.map(g=>g.replace(/_nbr$/,'')).join("_");
-            const viewName = `${prefix}_${targetFlag}_frist_last_app_${date.replace(/-/g,'')}`;
+            const viewName = `${prefix}_${targetFlag}_first_last_app_${date.replace(/-/g,'')}`;
             publish(viewName,{type:"view"}).query(ctx =>
                                                         find_first_last(date,targetcol,windows,group,
                                                                         ctx.ref("partitioned_full_data"))

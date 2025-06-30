@@ -20,7 +20,7 @@ function find_first_last(targetDate,targetCol,windows,keyCols,refTable) {
                                       return cols;
                                       
     }).join(",\n")
-    return `SELECT,
+    return `SELECT
             ${groupCol},
             ${columns}
             FROM ${refTable}
