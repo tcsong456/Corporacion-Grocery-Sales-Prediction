@@ -5,7 +5,7 @@ const promo_conditions = ["=1","=0"];
 const groups = [["item_nbr"],["class","store_nbr"],["store_nbr","item_nbr"]];
 
 groups.forEach(group => {
-    const view_prefix = group.join("_").replace(/_nbr/,"");
+    const view_prefix = group.join("_").replace(/_nbr/g,"");
     promo_conditions.forEach(promoCondition => {
                              const promoFlag = promoCondition==="=1" ? "has_promo" : "no_promo";
                              dates.forEach(date => {
