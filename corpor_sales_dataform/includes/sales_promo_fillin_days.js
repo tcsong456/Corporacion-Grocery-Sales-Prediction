@@ -7,11 +7,11 @@ function find_first_last(targetDate,targetCol,windows,keyCols,refTable) {
                                                               AND unit_sales > 0 THEN 1 ELSE 0 END`;
                                       const target_flag = targetCol==="unit_sales" ? "sale" : "promo";
                                       const cols = [
-                                                  `MAX(CASE WHEN date BETWEEN ${window_start} AND ${window_end} AND 
-                                                  ${targetCol} > 0 THEN ${w} - DATE_DIFF(DATE('${targetDate}'),date,DAY)
+                                                  `MIN(CASE WHEN date BETWEEN ${window_start} AND ${window_end} AND 
+                                                  ${targetCol} > 0 THEN DATE_DIFF(DATE('${targetDate}'),date,DAY) - 1
                                                   ELSE NULL END)
                                                   AS last_${target_flag}_app_past_${w}_days`,
-                                                  `MIN(CASE WHEN date BETWEEN ${window_start} AND ${window_end} AND 
+                                                  `MAX(CASE WHEN date BETWEEN ${window_start} AND ${window_end} AND 
                                                   ${targetCol} > 0 THEN DATE_DIFF(DATE('${targetDate}'),date,DAY)
                                                   ELSE NULL END)
                                                   AS first_${target_flag}_app_past_${w}_days`];
