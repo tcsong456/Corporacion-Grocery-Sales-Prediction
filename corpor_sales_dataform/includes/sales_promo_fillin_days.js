@@ -8,10 +8,12 @@ function find_first_last(targetDate,targetCol,windows,keyCols,refTable) {
                                       const target_flag = targetCol==="unit_sales" ? "sale" : "promo";
                                       const cols = [
                                                   `MAX(CASE WHEN date BETWEEN ${window_start} AND ${window_end} AND 
-                                                  ${targetCol} > 0 THEN ${w} - DATE_DIFF(DATE('${targetDate}'),date,DAY))
+                                                  ${targetCol} > 0 THEN ${w} - DATE_DIFF(DATE('${targetDate}'),date,DAY)
+                                                  ELSE NULL END)
                                                   AS last_${target_flag}_app_past_${w}_days`,
                                                   `MIN(CASE WHEN date BETWEEN ${window_start} AND ${window_end} AND 
-                                                  ${targetCol} > 0 THEN DATE_DIFF(DATE('${targetDate}'),date,DAY))
+                                                  ${targetCol} > 0 THEN DATE_DIFF(DATE('${targetDate}'),date,DAY)
+                                                  ELSE NULL END)
                                                   AS first_${target_flag}_app_past_${w}_days`];
                                       if (targetCol==="unit_sales") {
                                           cols.push(`SUM(${sales_expr}) AS has_sales_in_last_${w}_days`,
