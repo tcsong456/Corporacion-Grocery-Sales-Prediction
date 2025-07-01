@@ -1,5 +1,5 @@
 function promo_decay_window(targetDate,window_sizes,decay_rate,promoCondition,refTable,keyCols) {
-    const promoFlag = promoCondition === "=1" ? "promo" : "no_promo";
+    const promoFlag = promoCondition === ">0" ? "has_promo" : "no_promo";
     const keyColumns = keyCols.join(", ");
     const features = window_sizes.map(w => `SELECT
                                                 ${keyColumns},
