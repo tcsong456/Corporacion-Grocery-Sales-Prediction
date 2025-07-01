@@ -5,12 +5,13 @@ const groups = [["item_nbr"],["class","store_nbr"],["store_nbr","item_nbr"]];
 
 groups.forEach(group => {
     const view_prefix = group.join("_").replace(/_nbr/g,"");
+    const refTable = `partitioned_${view_prefix}_data`;
     dates.forEach(date => {
                           const viewName = `${view_prefix}_rolling_sales_stats_${date.replace(/-/g,'')}`;
                           publish(viewName,{type: "view"}).query(ctx => 
                                                                       rolling_window_stats(date,windows,0.9,
                                                                       group,
-                                                                      ctx.ref("partitioned_full_data"))
+                                                                      ctx.ref(refTable))
                           );
     });
 });

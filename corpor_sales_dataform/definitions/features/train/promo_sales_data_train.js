@@ -7,6 +7,7 @@ const promo_conditions = ["=1","=0"]
 groups.forEach(group => {
     const keyCols = group.join(", ");
     const view_prefix = group.map(x => x.replace(/_nbr$/,'')).join('_');
+    const refTable = `partitioned_${view_prefix}_data`;
     promo_conditions.forEach(promoCondition => {
         const promoFlag = promoCondition === "=1" ? "has_promo" : "no_promo";
         dates.forEach(date => {
@@ -16,7 +17,7 @@ groups.forEach(group => {
                                                                             SELECT
                                                                             ${keyCols},
                                                                             ${columns}
-                                                                            FROM ${ctx.ref("partitioned_full_data")}
+                                                                            FROM ${ctx.ref(refTable)}
                                                                             GROUP BY ${keyCols}
                                                                         `);
         });
