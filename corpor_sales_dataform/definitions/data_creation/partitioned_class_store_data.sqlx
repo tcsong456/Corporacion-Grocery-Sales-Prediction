@@ -1,0 +1,16 @@
+config {
+    type: "table",
+    bigquery: {
+        partitionBy: "date",
+        clusterBy: ["class","store_nbr"]
+    }
+}
+
+SELECT
+  class,
+  store_nbr,
+  date,
+  SUM(unit_sales) AS unit_sales,
+  SUM(onpromotion) AS onpromotion
+  FROM ${ref("full_data")}
+  GROUP BY class,store_nbr,date
