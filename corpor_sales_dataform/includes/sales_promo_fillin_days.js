@@ -1,4 +1,4 @@
-function find_first_last(targetDate,targetCol,windows,keyCols,refTable) {
+function find_first_last(targetDate,targetCol,windows,keyCols,refTable,prefix) {
     const groupCol = keyCols.join(",")
     const columns = windows.flatMap(w => {
                                       const window_start = `DATE_SUB(DATE('${targetDate}'),INTERVAL ${w} DAY)`;
@@ -10,14 +10,14 @@ function find_first_last(targetDate,targetCol,windows,keyCols,refTable) {
                                                   `MIN(CASE WHEN date BETWEEN ${window_start} AND ${window_end} AND 
                                                   ${targetCol} > 0 THEN DATE_DIFF(DATE('${targetDate}'),date,DAY) - 1
                                                   ELSE NULL END)
-                                                  AS last_${target_flag}_app_past_${w}_days`,
+                                                  AS ${prefix}_last_${target_flag}_app_past_${w}_days`,
                                                   `MAX(CASE WHEN date BETWEEN ${window_start} AND ${window_end} AND 
                                                   ${targetCol} > 0 THEN DATE_DIFF(DATE('${targetDate}'),date,DAY)
                                                   ELSE NULL END)
-                                                  AS first_${target_flag}_app_past_${w}_days`];
+                                                  AS ${prefix}_first_${target_flag}_app_past_${w}_days`];
                                       if (targetCol==="unit_sales") {
-                                          cols.push(`SUM(${sales_expr}) AS has_sales_in_last_${w}_days`,
-                                                      `SUM(${sales_expr}) / ${w} AS percent_days_with_sales_last_${w}_days`);
+                                          cols.push(`SUM(${sales_expr}) AS ${prefix}_has_sales_in_last_${w}_days`,
+                                                      `SUM(${sales_expr}) / ${w} AS ${prefix}_percent_days_with_sales_last_${w}_days`);
                                       }
                                       return cols;
                                       

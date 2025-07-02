@@ -9,6 +9,6 @@ groups.forEach(group => {
     dates.forEach(date => {
         const viewName = `${prefix}_future_promo_indicators_${date.replace(/-/g,'')}`;
         publish(viewName,{type:"view"}).query(ctx => 
-                                                    promo_indicator_pivot(date,group,ctx.ref(refTable)));
+                                                    promo_indicator_pivot(date,group,ctx.ref(refTable),prefix));
     });
 });

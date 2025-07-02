@@ -1,4 +1,4 @@
-function promo_indicator_pivot(startDate,keyCol,refTable) {
+function promo_indicator_pivot(startDate,keyCol,refTable,prefix) {
     const dates = [];
     const groupCol = keyCol.join(",");
     const padding = n =>  String(n).padStart(2,'0');
@@ -13,7 +13,7 @@ function promo_indicator_pivot(startDate,keyCol,refTable) {
     }
     
     const columns = dates.map((d,index) => {
-        const col =  `promo_${index}`;
+        const col =  `${prefix}_promo_${index}`;
         
         return `
                 MAX(CASE WHEN date=DATE('${d}') THEN onpromotion ELSE NULL END) AS ${col}

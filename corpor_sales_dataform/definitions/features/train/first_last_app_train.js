@@ -13,7 +13,7 @@ target_cols.forEach(targetcol=>{
             const viewName = `${prefix}_${targetFlag}_first_last_app_${date.replace(/-/g,'')}`;
             publish(viewName,{type:"view"}).query(ctx =>
                                                         find_first_last(date,targetcol,windows,group,
-                                                                        ctx.ref(refTable))
+                                                                        ctx.ref(refTable),prefix)
                                                     );
         });
     });

@@ -11,7 +11,7 @@ groups.forEach(group => {
                           publish(viewName,{type: "view"}).query(ctx => 
                                                                       rolling_window_stats(date,windows,0.9,
                                                                       group,
-                                                                      ctx.ref(refTable))
+                                                                      ctx.ref(refTable),view_prefix)
                           );
     });
 });

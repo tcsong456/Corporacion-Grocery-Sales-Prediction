@@ -14,7 +14,7 @@ groups.forEach(group => {
                                     publish(viewName,{type: "view"}).query(ctx =>
                                                                            promo_decay_window(date,windows,0.9,promoCondition,
                                                                            ctx.ref(refTable),
-                                                                           group));
+                                                                           group,view_prefix));
             });
         });
 });

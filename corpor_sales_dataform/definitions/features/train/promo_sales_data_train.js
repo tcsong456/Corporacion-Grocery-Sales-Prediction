@@ -12,7 +12,7 @@ groups.forEach(group => {
         const promoFlag = promoCondition === ">0" ? "has_promo" : "no_promo";
         dates.forEach(date => {
                                 const viewName = `${view_prefix}_${promoFlag}_sales_sum_${date.replace(/-/g,'')}`;
-                                const columns = windows.map(w => promo_window(date,w,promoCondition)).join(",\n")
+                                const columns = windows.map(w => promo_window(date,w,promoCondition,view_prefix)).join(",\n")
                                 publish(viewName,{type: "view"}).query(ctx =>`
                                                                             SELECT
                                                                             ${keyCols},

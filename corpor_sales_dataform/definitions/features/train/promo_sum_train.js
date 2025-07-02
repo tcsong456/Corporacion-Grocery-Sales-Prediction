@@ -9,7 +9,7 @@ groups.forEach(group => {
     dates.forEach(date => {
         const viewName = `${table_prefix}_promo_sum_${date.replace(/-/g,'')}`;
         publish(viewName,{type:"view"}).query(ctx => promo_window_sum(date,windows,group,
-                                                                      ctx.ref(refTable))
+                                                                      ctx.ref(refTable),table_prefix)
         );
     });
 });

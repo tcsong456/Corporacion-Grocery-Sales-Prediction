@@ -1,4 +1,4 @@
-function rolling_window_stats(targetDate,window_sizes,decay_rate,keyCols,refTable) {
+function rolling_window_stats(targetDate,window_sizes,decay_rate,keyCols,refTable,prefix) {
     const keyColumns = keyCols.join(", ");
     const features = window_sizes.map(w => `SELECT
                                              ${keyColumns},
@@ -19,12 +19,12 @@ function rolling_window_stats(targetDate,window_sizes,decay_rate,keyCols,refTabl
                                              `).join("\nUNION ALL\n");
     const columns = window_sizes.flatMap(w => {
                                                 return [
-                                                `MAX(CASE WHEN source=${w} THEN unit_sales_min END) AS unit_sales_min_${w}`,
-                                                `MAX(CASE WHEN source=${w} THEN unit_sales_max END) AS unit_sales_max_${w}`,
-                                                `MAX(CASE WHEN source=${w} THEN unit_sales_mean END) AS unit_sales_mean_${w}`,
-                                                `MAX(CASE WHEN source=${w} THEN unit_sales_median END) AS unit_sales_median_${w}`,
-                                                `MAX(CASE WHEN source=${w} THEN unit_sales_std END) AS unit_sales_std_${w}`,
-                                                `MAX(CASE WHEN source=${w} THEN unit_sales_decay_sum END) AS unit_sales_decay_sum_${w}`
+                                                `MAX(CASE WHEN source=${w} THEN unit_sales_min END) AS ${prefix}_unit_sales_min_${w}`,
+                                                `MAX(CASE WHEN source=${w} THEN unit_sales_max END) AS ${prefix}_unit_sales_max_${w}`,
+                                                `MAX(CASE WHEN source=${w} THEN unit_sales_mean END) AS ${prefix}_unit_sales_mean_${w}`,
+                                                `MAX(CASE WHEN source=${w} THEN unit_sales_median END) AS ${prefix}_unit_sales_median_${w}`,
+                                                `MAX(CASE WHEN source=${w} THEN unit_sales_std END) AS ${prefix}_unit_sales_std_${w}`,
+                                                `MAX(CASE WHEN source=${w} THEN unit_sales_decay_sum END) AS ${prefix}_unit_sales_decay_sum_${w}`
                                                 ]                                        
                                         }).join(",\n");
     return `WITH feature_table AS

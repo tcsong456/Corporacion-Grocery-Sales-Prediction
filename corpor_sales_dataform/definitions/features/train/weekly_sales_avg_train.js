@@ -34,7 +34,7 @@ groups.forEach(group => {
         const allColumns = [];
         periods.forEach(period => {
             const validDates = buildPastDates(date,period);
-            const columns = weekly_sales_mean(validDates,period);
+            const columns = weekly_sales_mean(validDates,period,prefix);
             allDates.push(...validDates);
             allColumns.push(columns);
             });

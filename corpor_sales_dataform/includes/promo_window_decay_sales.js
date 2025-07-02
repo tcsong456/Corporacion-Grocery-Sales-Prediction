@@ -1,4 +1,4 @@
-function promo_decay_window(targetDate,window_sizes,decay_rate,promoCondition,refTable,keyCols) {
+function promo_decay_window(targetDate,window_sizes,decay_rate,promoCondition,refTable,keyCols,prefix) {
     const promoFlag = promoCondition === ">0" ? "has_promo" : "no_promo";
     const keyColumns = keyCols.join(", ");
     const features = window_sizes.map(w => `SELECT
@@ -15,7 +15,7 @@ function promo_decay_window(targetDate,window_sizes,decay_rate,promoCondition,re
                                                 ).join("\nUNION ALL\n");
     const columns = window_sizes.map(w => `
                                             MAX(CASE WHEN source=${w} THEN
-                                            sales_decay_sum END) AS ${promoFlag}_sales_decay_sum_${w}`
+                                            sales_decay_sum END) AS ${prefix}_${promoFlag}_sales_decay_sum_${w}`
                                             ).join(",\n");    
                                         
     return `WITH decay_window_sales_table AS 
