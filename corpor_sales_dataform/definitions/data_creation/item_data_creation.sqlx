@@ -1,0 +1,11 @@
+config {
+    type: "operations",
+    hasOutput: true,
+    name:"item_data_table"
+}
+
+CREATE OR REPLACE EXTERNAL TABLE ${self()}
+OPTIONS(
+    format = 'CSV',
+    uris = ['gs://corpor-sales-data/items.csv']  
+);

@@ -79,7 +79,7 @@ df_sales.write \
   
 client = storage.Client()
 bucket = client.bucket(bucket_name)
-for blob_name in ['items.csv','stores.csv','oil.csv','transactions.csv','holidays_events.csv']:
+for blob_name in ['stores.csv','oil.csv','transactions.csv','holidays_events.csv']:
     blob = bucket.blob(blob_name)
     blob.delete()
 blobs = bucket.list_blobs(prefix='full_df/')
