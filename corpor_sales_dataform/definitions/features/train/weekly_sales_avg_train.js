@@ -21,7 +21,7 @@ function buildPastDates(endDate,period) {
 }
 
 const { weekly_sales_mean } = require("includes/weekly_sales_mean_helper")
-const dates = ['2017-6-14','2017-6-21','2017-6-27','2017-7-05','2017-7-12','2017-7-19'];
+const dates = ['2017-6-14','2017-6-21','2017-6-28','2017-7-05','2017-7-12','2017-7-19'];
 const groups = [["item_nbr"],["class","store_nbr"],["store_nbr","item_nbr"]];
 const periods = [4,10,20]
 
