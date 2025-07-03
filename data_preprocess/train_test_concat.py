@@ -31,8 +31,6 @@ df.write \
 
 client = storage.Client()
 bucket = client.bucket(bucket_name)
-blob = bucket.blob('test.csv')
-blob.delete()
 blobs = list(bucket.list_blobs(prefix='train/'))
 for blob in blobs:
     blob.delete()
