@@ -29,16 +29,16 @@ const datasets = ['store_item_rolling_sales_stats',
                   'item_sales_first_last_app',
                   'class_store_sales_first_last_app'];
                   
-const date = '2017-7-26';
+const date = '2017-8-16';
 const { merge_datasets } = require("includes/merge");
 
-publish("raw_validation",{type:"view"}).query(ctx => merge_datasets(datasets,date,ctx));
+publish("raw_test",{type:"view"}).query(ctx => merge_datasets(datasets,date,ctx));
 
-publish("df_validation",{type:"view"}).query(ctx => `
+publish("df_test",{type:"view"}).query(ctx => `
                                                     SELECT * FROM(
                                                     SELECT
                                                     DISTINCT a.store_nbr,a.item_nbr,b.* EXCEPT(store_nbr,item_nbr)
                                                     FROM ${ctx.ref("test_data_table")} a
-                                                    LEFT JOIN ${ctx.ref("raw_validation")} b
+                                                    LEFT JOIN ${ctx.ref("raw_test")} b
                                                     ON a.store_nbr=b.store_nbr AND a.item_nbr=b.item_nbr) c
                                                     `)
