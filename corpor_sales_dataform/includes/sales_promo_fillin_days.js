@@ -5,7 +5,7 @@ function find_first_last(targetDate,targetCol,windows,keyCols,refTable,prefix) {
                                       const window_end = `DATE_SUB(DATE('${targetDate}'),INTERVAL 1 DAY)`;
                                       const sales_expr = `CASE WHEN date BETWEEN ${window_start} AND ${window_end}
                                                               AND unit_sales > 0 THEN 1 ELSE 0 END`;
-                                      const target_flag = targetCol==="unit_sales" ? "sale" : "promo";
+                                      const target_flag = targetCol==="unit_sales" ? "sales" : "promo";
                                       const cols = [
                                                   `MIN(CASE WHEN date BETWEEN ${window_start} AND ${window_end} AND 
                                                   ${targetCol} > 0 THEN DATE_DIFF(DATE('${targetDate}'),date,DAY) - 1

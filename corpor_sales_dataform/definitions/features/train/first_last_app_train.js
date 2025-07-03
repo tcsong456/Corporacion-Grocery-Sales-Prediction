@@ -2,7 +2,7 @@ const { find_first_last } = require("includes/sales_promo_fillin_days");
 const windows = [7,14,30,60,140];
 const dates = ['2017-6-14','2017-6-21','2017-6-28','2017-7-05','2017-7-12','2017-7-19'];
 const groups = [["item_nbr"],["class","store_nbr"],["store_nbr","item_nbr"]];
-const target_cols = ['unit_sales','onpromotion']
+const target_cols = ["unit_sales","onpromotion"]
 
 target_cols.forEach(targetcol=>{
     const targetFlag = targetcol==='unit_sales' ? 'sales' : 'promo';
