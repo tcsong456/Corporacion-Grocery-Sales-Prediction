@@ -8,7 +8,6 @@ key.json
 terraform/*
 !terraform/*.tf
 destroy_terraform.sh
-key.json
 kaggle.json
 data/*
 EDA/*
