@@ -14,6 +14,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 RUN npm install -g @dataform/cli
 COPY key.json .
+COPY corpor_sales_dataform/ ./dataform/
 COPY shell_scripts/run_dataform.sh .
-RUN dos2unix run_dataform.sh
-CMD ["/bin/sh","./run_dataform.sh"]
+
+RUN dos2unix run_dataform.sh && \
+    chmod +x run_dataform.sh
+
+ENTRYPOINT ["./run_dataform.sh"]
