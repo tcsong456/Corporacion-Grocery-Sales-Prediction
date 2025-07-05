@@ -13,6 +13,7 @@ data/*
 EDA/*
 preprocessing/dummy_test.py
 trash/*
+key.txt
 
 # C extensions
 *.so
