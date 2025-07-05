@@ -22,7 +22,7 @@ jobs:
       
       - name: Download the data and setup the terraform
         run: |
-          docker build -f dockerfiles/terraform_setup_dockerfile -t download-data-setup-terraform 
+          docker build -f dockerfiles/terraform_setup_dockerfile -t download-data-setup-terraform .
       
       - name: Run data download and terraform setup
         run: |
