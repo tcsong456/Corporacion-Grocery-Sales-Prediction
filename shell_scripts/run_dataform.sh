@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#cd dataform
-#dataform run
+cd dataform
+dataform run
 
-#cd ..
+cd ..
 PROJECT_NAME="corporacion-sales-prediction"
 gcloud auth activate-service-account --key-file=key.json
 project_id=$(gcloud projects list --format="value(projectId)" --filter="name:$PROJECT_NAME")
