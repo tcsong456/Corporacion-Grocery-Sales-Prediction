@@ -30,7 +30,7 @@ COPY shell_scripts/data_download.sh .
 COPY shell_scripts/run_terraform.sh .
 COPY terraform/ ./terraform/
 COPY data_preprocess/ ./data_preprocess/
-COPY key.json .
+#COPY key.json .
 
 RUN gcloud auth activate-service-account --key-file=key.json && \
     PROJECT_ID=$(jq -r '.project_id' key.json) && \
