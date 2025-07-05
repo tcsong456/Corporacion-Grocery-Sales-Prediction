@@ -1,0 +1,21 @@
+name: CI/CD pipeline
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+    
+      - name: Decode GCP key
+        run: |
+          echo "${{ secrets.GCP_KEY_JSON }}" | base64 -d > key.json
+      
+      - name: Activate gcloud
+        run: |
+          gcloud auth activate-service-account --key-file=key.json
+          gcloud config set project corporacion-sales-prediction
