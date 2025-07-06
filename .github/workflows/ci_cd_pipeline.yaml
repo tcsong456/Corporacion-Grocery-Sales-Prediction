@@ -1,8 +1,14 @@
 name: CI/CD pipeline
 on:
   push:
-    branches: [main]
+    branches: 
+      - main
+    paths:
+      - 'corpor_sales_dataform/**'
+      - 'terraform/**'
   pull_request:
+      paths:
+        - 'corpor_sales_dataform/**'
 
 jobs:
   deploy:
