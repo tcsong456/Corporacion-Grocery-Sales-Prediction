@@ -19,6 +19,12 @@ jobs:
         run: |
           gcloud auth activate-service-account --key-file=key.json
           gcloud config set project corporacion-sales-prediction
+    
+      - name: Create kaggle.json
+        run: |
+          mkdir -p ~/.kaggle/
+          "${{ secrets.KAGGLE_JSON }}" > ~/.kaggle/kaggle.json
+          cp ~/.kaggle/kaggle.json .
       
       - name: Download the data and setup the terraform
         run: |
