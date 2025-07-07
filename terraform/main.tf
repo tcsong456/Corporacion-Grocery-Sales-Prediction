@@ -395,7 +395,7 @@ resource "google_cloudfunctions2_function" "trigger_dag" {
       COMPOSER_ENV = "${local.project_id}-cc3"
       DAG_ID       = "corpor-sales-prediction"
     }
-    service_account_email = ${local.umsa_fqn}
+    service_account_email = "${local.umsa_fqn}"
   }
   
   event_trigger {
