@@ -329,8 +329,7 @@ resource "time_sleep" "sleep_after_composer_creation" {
 resource "google_storage_bucket_object" "upload_dag_to_cc3" {
   name    = "dags/data_airflow.py"
   source  = "../data_preprocess/data_airflow.py"
-  bucket  = substr(substr(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix,5,length(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix)),0, \
-                   (length(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix)-10))
+  bucket  =  split("/",substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix,5,-1))[0]
   depends_on = [time_sleep.sleep_after_composer_creation]
 }
 
@@ -339,10 +338,10 @@ resource "google_pubsub_topic" "dags_upload" {
 }
 
 resource "google_storage_notification" "on_dags_upload" {
-  bukcet = data.google_composer_environment.cc3_env_creation.config.gcs_bucket
-  topic = google_pubsub_topic.bucket_events.id
+  bucket = split("/",substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix,5,-1))[0]
+  topic = google_pubsub_topic.dags_upload.id
   event_types = ["OBJECT_FINALIZE"]
-  object_name_prefix = data.google_composer_environment.cc3_env_creation.config.dag_gcs_prefix
+  object_name_prefix = google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix
   payload_format = "JASON_API_V1"
 }
 
@@ -354,12 +353,12 @@ data "archive_file" "function_package" {
   
   source {
     content = file("../cloud_function/main.py")
-    name    = "main.py"
+    filename    = "main.py"
   }
   
   source {
     content = file("../cloud_function/requirements.txt")
-    name    = "requirements.txt"
+    filename    = "requirements.txt"
   }
 }
 
