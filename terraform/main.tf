@@ -7,7 +7,7 @@ umsa_fqn           = "${local.umsa}@${local.project_id}.iam.gserviceaccount.com"
 composer_roles = [
   "roles/pubsub.subscriber",
   "roles/dataproc.worker",
-  "role.composer_viewer",
+  "roles/composer_viewer",
   "roles/composer.worker",
   "roles/composer.admin",
   "roles/dataproc.editor",
@@ -395,6 +395,7 @@ resource "google_cloudfunctions2_function" "trigger_dag" {
       COMPOSER_ENV = "${local.project_id}-cc3"
       DAG_ID       = "corpor-sales-prediction"
     }
+    service_account_email = ${local.umsa_fqn}
   }
   
   event_trigger {
