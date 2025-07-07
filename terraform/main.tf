@@ -5,7 +5,9 @@ region             = "${var.region}"
 umsa               = "${var.umsa}"
 umsa_fqn           = "${local.umsa}@${local.project_id}.iam.gserviceaccount.com"
 composer_roles = [
+  "roles/pubsub.subscriber",
   "roles/dataproc.worker",
+  "role.composer_viewer",
   "roles/composer.worker",
   "roles/composer.admin",
   "roles/dataproc.editor",
@@ -198,6 +200,14 @@ resource "google_storage_bucket" "corpor_scripts_bucket_creation" {
   depends_on = [time_sleep.wait_for_network_and_firewall_creation]
 }
 
+resource "google_storage_bucket" "code_bucket" {
+  project                       = local.project_id
+  name                          = "cloud-function-bucket"
+  location                      = local.region
+  force_destroy                 = true
+  depends_on = [time_sleep.wait_for_network_and_firewall_creation]
+}
+
 resource "time_sleep" "sleep_after_buckets_creation" {
   create_duration = "60s"
   depends_on = [google_storage_bucket.corpor_data_bucket_creation,
@@ -322,6 +332,79 @@ resource "google_storage_bucket_object" "upload_dag_to_cc3" {
   bucket  = substr(substr(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix,5,length(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix)),0, \
                    (length(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix)-10))
   depends_on = [time_sleep.sleep_after_composer_creation]
+}
+
+resource "google_pubsub_topic" "dags_upload" {
+  name = "cc3-bucket-events"
+}
+
+resource "google_storage_notification" "on_dags_upload" {
+  bukcet = data.google_composer_environment.cc3_env_creation.config.gcs_bucket
+  topic = google_pubsub_topic.bucket_events.id
+  event_types = ["OBJECT_FINALIZE"]
+  object_name_prefix = data.google_composer_environment.cc3_env_creation.config.dag_gcs_prefix
+  payload_format = "JASON_API_V1"
+}
+
+provider "archive" {}
+
+data "archive_file" "function_package" {
+  type = "zip"
+  output_path = "../cloud_function/function.zip"
+  
+  source {
+    content = file("../cloud_function/main.py")
+    name    = "main.py"
+  }
+  
+  source {
+    content = file("../cloud_function/requirements.txt")
+    name    = "requirements.txt"
+  }
+}
+
+resource "google_storage_bucket_object" "upload_function_zip" {
+  name    = "function.zip"
+  source  = "../cloud_function/function.zip"
+  bucket  = google_storage_bucket.code_bucket.name
+}
+
+resource "google_cloudfunction2_function" "trigger_dag" {
+  name      = "cc3-trigger-dags"
+  location  = local.region
+  project   = local.project_id
+  
+  build_config {
+    runtime     = "python39"
+    entry_point = "handler"
+    source {
+      storage_source {
+        bucket = google_storage_bucket.code_bucket.name
+        object = google_storage_bucket_object.upload_function_zip.name
+      }
+    }
+  }
+  
+  service_config {
+    available_memory  = "256M"
+    timeout_seconds   = "60s"
+    ingress_settings  = "ALLOW_INTERVAL_ONLY"
+    
+    environment_variable {
+      PROJECT_ID   = local.project_id
+      REGION       = local.region
+      COMPOSER_ENV = "${local.project_id}-cc3"
+      DAG_ID       = "corpor-sales-prediction"
+    }
+  }
+  
+  event_trigger {
+    event_type = "google.cloud.pubsub.topic.v1.messagePublished"
+    resource   = google_pubsub_topic.dags_upload.id
+  }
+  
+  depends_on = [google_storage_bucket_object.upload_function_zip,
+                google_storage_notification.on_dags_upload]
 }
 
 resource "google_bigquery_dataset" "bq_dataset_creation" {
