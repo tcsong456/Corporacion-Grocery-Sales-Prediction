@@ -368,7 +368,7 @@ resource "google_storage_bucket_object" "upload_function_zip" {
   bucket  = google_storage_bucket.code_bucket.name
 }
 
-resource "google_cloudfunction2_function" "trigger_dag" {
+resource "google_cloudfunctions2_function" "trigger_dag" {
   name      = "cc3-trigger-dags"
   location  = local.region
   project   = local.project_id
