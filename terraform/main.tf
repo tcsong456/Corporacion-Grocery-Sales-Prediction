@@ -7,7 +7,7 @@ umsa_fqn           = "${local.umsa}@${local.project_id}.iam.gserviceaccount.com"
 composer_roles = [
   "roles/pubsub.subscriber",
   "roles/dataproc.worker",
-  "roles/composer_viewer",
+  "roles/composer.viewer",
   "roles/composer.worker",
   "roles/composer.admin",
   "roles/dataproc.editor",
