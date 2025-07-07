@@ -386,10 +386,10 @@ resource "google_cloudfunctions2_function" "trigger_dag" {
   
   service_config {
     available_memory  = "256M"
-    timeout_seconds   = "60s"
-    ingress_settings  = "ALLOW_INTERVAL_ONLY"
+    timeout_seconds   = 60
+    ingress_settings  = "ALLOW_INTERNAL_ONLY"
     
-    environment_variable {
+    environment_variables = {
       PROJECT_ID   = local.project_id
       REGION       = local.region
       COMPOSER_ENV = "${local.project_id}-cc3"
@@ -399,7 +399,7 @@ resource "google_cloudfunctions2_function" "trigger_dag" {
   
   event_trigger {
     event_type = "google.cloud.pubsub.topic.v1.messagePublished"
-    resource   = google_pubsub_topic.dags_upload.id
+    pubsub_topic = google_pubsub_topic.dags_upload.id
   }
   
   depends_on = [google_storage_bucket_object.upload_function_zip,

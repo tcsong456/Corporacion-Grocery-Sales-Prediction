@@ -15,6 +15,7 @@ preprocessing/dummy_test.py
 trash/*
 key.txt
 .terraform/
+cloud_function/
 
 # C extensions
 *.so
