@@ -342,7 +342,7 @@ resource "google_storage_notification" "on_dags_upload" {
   topic = google_pubsub_topic.dags_upload.id
   event_types = ["OBJECT_FINALIZE"]
   object_name_prefix = google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix
-  payload_format = "JASON_API_V1"
+  payload_format = "JSON_API_V1"
 }
 
 provider "archive" {}
