@@ -5,9 +5,11 @@ region             = "${var.region}"
 umsa               = "${var.umsa}"
 umsa_fqn           = "${local.umsa}@${local.project_id}.iam.gserviceaccount.com"
 composer_roles = [
-  "roles/pubsub.subscriber",
+  "roles/pubsub.admin",
+  "roles/eventarc.eventReceiver",
+  "roles/eventarc.admin",
+  "roles/run.admin",
   "roles/dataproc.worker",
-  "roles/composer.viewer",
   "roles/composer.worker",
   "roles/composer.admin",
   "roles/dataproc.editor",
@@ -24,14 +26,22 @@ composer_roles = [
 ]
 composer_apis = [
     "dataproc.googleapis.com",
-    "composer.googleapis.com",             # Cloud Composer API
-    "compute.googleapis.com",              # Compute Engine API
-    "storage.googleapis.com",              # Cloud Storage API
-    "iam.googleapis.com",                  # IAM API
-    "container.googleapis.com",            # Kubernetes Engine API
-    "sqladmin.googleapis.com",           # Cloud SQL API (if using Airflow database)
+    "composer.googleapis.com",
+    "compute.googleapis.com",              
+    "storage.googleapis.com",              
+    "iam.googleapis.com",                  
+    "container.googleapis.com",            
+    "sqladmin.googleapis.com",           
     "servicenetworking.googleapis.com",
-    "bigquery.googleapis.com"
+    "bigquery.googleapis.com",
+    "cloudbuild.googleapis.com",
+    "cloudfunctions.googleapis.com",
+    "pubsub.googleapis.com",
+    "eventarc.googleapis.com",
+    "artifactregistry.googleapis.com",
+    "run.googleapis.com",
+    "serviceusage.googleapis.com",
+    "logging.googleapis.com"
   ]
 }
 
@@ -88,7 +98,8 @@ module "vpc_creation" {
        {
           range_name      = "pods"
           ip_cidr_range   = "10.1.0.0/17"
-          
+       },
+       {
           range_name      = "services"
           ip_cidr_range   = "10.2.0.0/22"
                        }
@@ -200,10 +211,11 @@ resource "google_storage_bucket" "corpor_scripts_bucket_creation" {
   depends_on = [time_sleep.wait_for_network_and_firewall_creation]
 }
 
-resource "google_storage_bucket" "code_bucket" {
+resource "google_storage_bucket" "corpor_cloud_function_creation" {
   project                       = local.project_id
-  name                          = "cloud-function-bucket"
+  name                          = "${local.project_id}-cf-bucket"
   location                      = local.region
+  uniform_bucket_level_access   = true
   force_destroy                 = true
   depends_on = [time_sleep.wait_for_network_and_firewall_creation]
 }
@@ -333,9 +345,21 @@ resource "google_storage_bucket_object" "upload_dag_to_cc3" {
   depends_on = [time_sleep.sleep_after_composer_creation]
 }
 
+data "google_project" "current" {
+  project_id = local.project_id
+}
+
 resource "google_pubsub_topic" "dags_upload" {
   name = "cc3-bucket-events"
 }
+
+resource "google_pubsub_topic_iam_binding" "gcs_publisher" {
+  topic = google_pubsub_topic.dags_upload.name
+  role  = "roles/pubsub.publisher"
+  members = ["serviceAccount:service-${data.google_project.current.number}@gs-project-accounts.iam.gserviceaccount.com"]
+  depends_on = [time_sleep.wait_for_roles,
+                google_pubsub_topic.dags_upload]
+} 
 
 resource "google_storage_notification" "on_dags_upload" {
   bucket = split("/",substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix,5,-1))[0]
@@ -365,7 +389,7 @@ data "archive_file" "function_package" {
 resource "google_storage_bucket_object" "upload_function_zip" {
   name    = "function.zip"
   source  = "../cloud_function/function.zip"
-  bucket  = google_storage_bucket.code_bucket.name
+  bucket  = google_storage_bucket.corpor_cloud_function_creation.name
 }
 
 resource "google_cloudfunctions2_function" "trigger_dag" {
@@ -378,7 +402,7 @@ resource "google_cloudfunctions2_function" "trigger_dag" {
     entry_point = "handler"
     source {
       storage_source {
-        bucket = google_storage_bucket.code_bucket.name
+        bucket = google_storage_bucket.corpor_cloud_function_creation.name
         object = google_storage_bucket_object.upload_function_zip.name
       }
     }
@@ -386,8 +410,8 @@ resource "google_cloudfunctions2_function" "trigger_dag" {
   
   service_config {
     available_memory  = "256M"
-    timeout_seconds   = 60
-    ingress_settings  = "ALLOW_INTERNAL_ONLY"
+    timeout_seconds   = 120
+#    ingress_settings  = "ALLOW_INTERNAL_ONLY"
     
     environment_variables = {
       PROJECT_ID   = local.project_id
@@ -399,12 +423,16 @@ resource "google_cloudfunctions2_function" "trigger_dag" {
   }
   
   event_trigger {
+    trigger_region = local.region
     event_type = "google.cloud.pubsub.topic.v1.messagePublished"
     pubsub_topic = google_pubsub_topic.dags_upload.id
   }
   
-  depends_on = [google_storage_bucket_object.upload_function_zip,
-                google_storage_notification.on_dags_upload]
+  depends_on = [time_sleep.wait_for_composer_apis,
+                google_storage_notification.on_dags_upload,
+                google_storage_bucket_object.upload_function_zip,
+                google_pubsub_topic_iam_binding.gcs_publisher
+                ]
 }
 
 resource "google_bigquery_dataset" "bq_dataset_creation" {

@@ -1,10 +1,10 @@
 from google.auth import default
-from googleclient import discovery
+from googleapiclient import discovery
 import base64,os,json
 
 project_id = os.environ['PROJECT_ID']
 region     = os.environ['REGION']
-composer_env = os.envrion['COMPOSER_ENV']
+composer_env = os.environ['COMPOSER_ENV']
 dag_id     = os.environ['DAG_ID']
 
 creds,_ = default()
@@ -20,12 +20,16 @@ def handler(event,context):
     name = message.get('name','')
     print(f'uploaded file:{name} detected')
     
-    if 'airflow.py' not in name:
+    if 'data_airflow.py' not in name:
         raise ValueError(f'file:{name} detected,but expect airflow.py in the dag file')
     
-    resource_fqn = f"projects/{project_id}/locations/{region}/environments/{composer_env}"
-    body = {'dagId':dag_id,
-            'dagRunId':f'dag-upload-{context.event_id}'}
-    response = composer().projects().locations().environments().run(body=body,
-                                                                    name=resource_fqn).execute()
-    print(f'{response} is triggered')
+    try:
+        resource_fqn = f"projects/{project_id}/locations/{region}/environments/{composer_env}"
+        body = {'dagId':dag_id,
+                'dagRunId':f'dag-upload-{context.event_id}'}
+        response = composer.projects().locations().environments().run(body=body,
+                                                                      name=resource_fqn).execute()
+        print(f"DAG run triggered successfully: {response}")
+    except Exception as e:
+        print(f"Failed to trigger DAG run: {e}")
+        raise
