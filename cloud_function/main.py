@@ -11,6 +11,7 @@ creds,_ = default()
 composer = discovery.build("composer","v1",credentials=creds,cache_discovery=False)
 
 def handler(event,context):
+    print(f"RAW EVENT: {event}")
     data = event.get("data")
     if not data:
         print("No data in payload,exit the program")

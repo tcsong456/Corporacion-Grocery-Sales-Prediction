@@ -11,6 +11,7 @@ composer_roles = [
   "roles/run.admin",
   "roles/dataproc.worker",
   "roles/composer.worker",
+  "roles/composer.user",
   "roles/composer.admin",
   "roles/dataproc.editor",
   "roles/iam.serviceAccountAdmin",
@@ -365,7 +366,7 @@ resource "google_storage_notification" "on_dags_upload" {
   bucket = split("/",substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix,5,-1))[0]
   topic = google_pubsub_topic.dags_upload.id
   event_types = ["OBJECT_FINALIZE"]
-  object_name_prefix = google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix
+  object_name_prefix = "dags/"
   payload_format = "JSON_API_V1"
 }
 
