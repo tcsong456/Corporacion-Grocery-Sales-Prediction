@@ -339,11 +339,27 @@ resource "time_sleep" "sleep_after_composer_creation" {
   depends_on = [google_composer_environment.cc3_env_creation]
 }
 
-resource "google_storage_bucket_object" "upload_dag_to_cc3" {
-  name    = "dags/data_airflow.py"
-  source  = "../data_preprocess/data_airflow.py"
-  bucket  =  split("/",substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix,5,-1))[0]
-  depends_on = [time_sleep.sleep_after_composer_creation]
+provider "archive" {}
+
+data "archive_file" "function_package" {
+  type = "zip"
+  output_path = "../cloud_function/function.zip"
+  
+  source {
+    content = file("../cloud_function/main.py")
+    filename    = "main.py"
+  }
+  
+  source {
+    content = file("../cloud_function/requirements.txt")
+    filename    = "requirements.txt"
+  }
+}
+
+resource "google_storage_bucket_object" "upload_function_zip" {
+  name    = "function.zip"
+  source  = "../cloud_function/function.zip"
+  bucket  = google_storage_bucket.corpor_cloud_function_creation.name
 }
 
 data "google_project" "current" {
@@ -370,27 +386,9 @@ resource "google_storage_notification" "on_dags_upload" {
   payload_format = "JSON_API_V1"
 }
 
-provider "archive" {}
-
-data "archive_file" "function_package" {
-  type = "zip"
-  output_path = "../cloud_function/function.zip"
-  
-  source {
-    content = file("../cloud_function/main.py")
-    filename    = "main.py"
-  }
-  
-  source {
-    content = file("../cloud_function/requirements.txt")
-    filename    = "requirements.txt"
-  }
-}
-
-resource "google_storage_bucket_object" "upload_function_zip" {
-  name    = "function.zip"
-  source  = "../cloud_function/function.zip"
-  bucket  = google_storage_bucket.corpor_cloud_function_creation.name
+resource "time_sleep" "wait_for_notification" {
+  create_duration = "60s"
+  depends_on = [google_storage_notification.on_dags_upload]
 }
 
 resource "google_cloudfunctions2_function" "trigger_dag" {
@@ -399,7 +397,7 @@ resource "google_cloudfunctions2_function" "trigger_dag" {
   project   = local.project_id
   
   build_config {
-    runtime     = "python39"
+    runtime     = "python310"
     entry_point = "handler"
     source {
       storage_source {
@@ -412,7 +410,7 @@ resource "google_cloudfunctions2_function" "trigger_dag" {
   service_config {
     available_memory  = "256M"
     timeout_seconds   = 120
-#    ingress_settings  = "ALLOW_INTERNAL_ONLY"
+    ingress_settings  = "ALLOW_INTERNAL_ONLY"
     
     environment_variables = {
       PROJECT_ID   = local.project_id
@@ -436,6 +434,34 @@ resource "google_cloudfunctions2_function" "trigger_dag" {
                 ]
 }
 
+resource "time_sleep" "wait_for_cloud_function" {
+  create_duration = "60s"
+  depends_on = [google_cloudfunctions2_function.trigger_dag]
+}
+
+
+resource "google_storage_bucket_object" "upload_dag_to_cc3" {
+  name    = "dags/data_airflow.py"
+  source  = "../data_preprocess/data_airflow.py"
+  bucket  =  split("/",substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix,5,-1))[0]
+  depends_on = [time_sleep.sleep_after_composer_creation,
+                time_sleep.wait_for_notification,
+                time_sleep.wait_for_cloud_function]
+}
+
+/*
+resource "null_resource" "upload_dag_to_cc3" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      gsutil cp ../data_preprocess/data_airflow.py \
+      gs://${split("/",substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix,5,-1))[0]}/dags/data_airflow.py
+    EOT
+  }
+  depends_on = [time_sleep.sleep_after_composer_creation,
+                time_sleep.wait_for_notification,
+                time_sleep.wait_for_cloud_function]
+}
+*/
 resource "google_bigquery_dataset" "bq_dataset_creation" {
   dataset_id                  = "corpor_sales_prediction_dataset"
   location                    = local.region
