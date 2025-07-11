@@ -17,19 +17,6 @@ store_bucket = "gs://" + bucket_name + "/stores.csv"
 item_bucket = "gs://" + bucket_name + "/items.csv"
 
 spark = SparkSession.builder.appName('store_item_merge').getOrCreate()
-# credential_key_path = "D:/machine_learning/projects/Corporacion-Grocery-Sales-Prediction/key.json"
-
-# spark = SparkSession.builder \
-#     .appName("GCS Example") \
-#     .config("spark.driver.memory","4g") \
-#     .config("spark.executor.memory","4g") \
-#     .config("spark.jars", "file:///D:/utils/gcs-connector-hadoop3-latest.jar") \
-#     .config("spark.hadoop.fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem") \
-#     .config("spark.hadoop.fs.AbstractFileSystem.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS") \
-#     .config("spark.hadoop.google.cloud.auth.service.account.enable", "true") \
-#     .config("spark.hadoop.google.cloud.auth.service.account.json.keyfile",credential_key_path) \
-#     .getOrCreate()
-
 spark.sparkContext.setLogLevel("ERROR")
 
 df_sales = spark.read.parquet(df_sales_bucket)
@@ -63,9 +50,7 @@ df_sales = df_sales.join(items,
         .join(stores,
               on=['store_nbr'],
               how='left')
-        # .join(df_long,
-        #       on=['store_nbr','item_nbr','date'],
-        #       how='left')
+
 df_sales = df_sales.withColumn('cluster',col('cluster').cast(ByteType())) \
         .withColumn('class',col('class').cast(ShortType())) \
         .withColumn('perishable',col('perishable').cast(ByteType())) \

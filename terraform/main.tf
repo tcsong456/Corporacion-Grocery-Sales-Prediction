@@ -5,8 +5,13 @@ region             = "${var.region}"
 umsa               = "${var.umsa}"
 umsa_fqn           = "${local.umsa}@${local.project_id}.iam.gserviceaccount.com"
 composer_roles = [
+  "roles/pubsub.admin",
+  "roles/eventarc.eventReceiver",
+  "roles/eventarc.admin",
+  "roles/run.admin",
   "roles/dataproc.worker",
   "roles/composer.worker",
+  "roles/composer.user",
   "roles/composer.admin",
   "roles/dataproc.editor",
   "roles/iam.serviceAccountAdmin",
@@ -22,14 +27,22 @@ composer_roles = [
 ]
 composer_apis = [
     "dataproc.googleapis.com",
-    "composer.googleapis.com",             # Cloud Composer API
-    "compute.googleapis.com",              # Compute Engine API
-    "storage.googleapis.com",              # Cloud Storage API
-    "iam.googleapis.com",                  # IAM API
-    "container.googleapis.com",            # Kubernetes Engine API
-    "sqladmin.googleapis.com",           # Cloud SQL API (if using Airflow database)
+    "composer.googleapis.com",
+    "compute.googleapis.com",              
+    "storage.googleapis.com",              
+    "iam.googleapis.com",                  
+    "container.googleapis.com",            
+    "sqladmin.googleapis.com",           
     "servicenetworking.googleapis.com",
-    "bigquery.googleapis.com"
+    "bigquery.googleapis.com",
+    "cloudbuild.googleapis.com",
+    "cloudfunctions.googleapis.com",
+    "pubsub.googleapis.com",
+    "eventarc.googleapis.com",
+    "artifactregistry.googleapis.com",
+    "run.googleapis.com",
+    "serviceusage.googleapis.com",
+    "logging.googleapis.com"
   ]
 }
 
@@ -86,7 +99,8 @@ module "vpc_creation" {
        {
           range_name      = "pods"
           ip_cidr_range   = "10.1.0.0/17"
-          
+       },
+       {
           range_name      = "services"
           ip_cidr_range   = "10.2.0.0/22"
                        }
@@ -192,6 +206,15 @@ resource "google_storage_bucket" "corpor_lib_bucket_creation" {
 resource "google_storage_bucket" "corpor_scripts_bucket_creation" {
   project                       = local.project_id
   name                          = "corpor-sales-scripts"
+  location                      = local.region
+  uniform_bucket_level_access   = true
+  force_destroy                 = true
+  depends_on = [time_sleep.wait_for_network_and_firewall_creation]
+}
+
+resource "google_storage_bucket" "corpor_cloud_function_creation" {
+  project                       = local.project_id
+  name                          = "${local.project_id}-cf-bucket"
   location                      = local.region
   uniform_bucket_level_access   = true
   force_destroy                 = true
@@ -316,14 +339,129 @@ resource "time_sleep" "sleep_after_composer_creation" {
   depends_on = [google_composer_environment.cc3_env_creation]
 }
 
+provider "archive" {}
+
+data "archive_file" "function_package" {
+  type = "zip"
+  output_path = "../cloud_function/function.zip"
+  
+  source {
+    content = file("../cloud_function/main.py")
+    filename    = "main.py"
+  }
+  
+  source {
+    content = file("../cloud_function/requirements.txt")
+    filename    = "requirements.txt"
+  }
+}
+
+resource "google_storage_bucket_object" "upload_function_zip" {
+  name    = "function.zip"
+  source  = "../cloud_function/function.zip"
+  bucket  = google_storage_bucket.corpor_cloud_function_creation.name
+}
+
+data "google_project" "current" {
+  project_id = local.project_id
+}
+
+resource "google_pubsub_topic" "dags_upload" {
+  name = "cc3-bucket-events"
+}
+
+resource "google_pubsub_topic_iam_binding" "gcs_publisher" {
+  topic = google_pubsub_topic.dags_upload.name
+  role  = "roles/pubsub.publisher"
+  members = ["serviceAccount:service-${data.google_project.current.number}@gs-project-accounts.iam.gserviceaccount.com"]
+  depends_on = [time_sleep.wait_for_roles,
+                google_pubsub_topic.dags_upload]
+} 
+
+resource "google_storage_notification" "on_dags_upload" {
+  bucket = split("/",substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix,5,-1))[0]
+  topic = google_pubsub_topic.dags_upload.id
+  event_types = ["OBJECT_FINALIZE"]
+  object_name_prefix = "dags/"
+  payload_format = "JSON_API_V1"
+}
+
+resource "time_sleep" "wait_for_notification" {
+  create_duration = "60s"
+  depends_on = [google_storage_notification.on_dags_upload]
+}
+
+resource "google_cloudfunctions2_function" "trigger_dag" {
+  name      = "cc3-trigger-dags"
+  location  = local.region
+  project   = local.project_id
+  
+  build_config {
+    runtime     = "python310"
+    entry_point = "handler"
+    source {
+      storage_source {
+        bucket = google_storage_bucket.corpor_cloud_function_creation.name
+        object = google_storage_bucket_object.upload_function_zip.name
+      }
+    }
+  }
+  
+  service_config {
+    available_memory  = "256M"
+    timeout_seconds   = 120
+    ingress_settings  = "ALLOW_INTERNAL_ONLY"
+    
+    environment_variables = {
+      PROJECT_ID   = local.project_id
+      REGION       = local.region
+      COMPOSER_ENV = "${local.project_id}-cc3"
+      DAG_ID       = "corpor-sales-prediction"
+    }
+    service_account_email = "${local.umsa_fqn}"
+  }
+  
+  event_trigger {
+    trigger_region = local.region
+    event_type = "google.cloud.pubsub.topic.v1.messagePublished"
+    pubsub_topic = google_pubsub_topic.dags_upload.id
+  }
+  
+  depends_on = [time_sleep.wait_for_composer_apis,
+                google_storage_notification.on_dags_upload,
+                google_storage_bucket_object.upload_function_zip,
+                google_pubsub_topic_iam_binding.gcs_publisher
+                ]
+}
+
+resource "time_sleep" "wait_for_cloud_function" {
+  create_duration = "60s"
+  depends_on = [google_cloudfunctions2_function.trigger_dag]
+}
+
+
 resource "google_storage_bucket_object" "upload_dag_to_cc3" {
   name    = "dags/data_airflow.py"
   source  = "../data_preprocess/data_airflow.py"
-  bucket  = substr(substr(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix,5,length(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix)),0, \
-                   (length(google_composer_environment.cc3_env_creation.0.dag_gcs_prefix)-10))
-  depends_on = [time_sleep.sleep_after_composer_creation]
+  bucket  =  split("/",substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix,5,-1))[0]
+  depends_on = [time_sleep.sleep_after_composer_creation,
+                time_sleep.wait_for_notification,
+                time_sleep.wait_for_cloud_function]
 }
 
+/*
+resource "null_resource" "upload_dag_to_cc3" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      gsutil cp ../data_preprocess/data_airflow.py \
+      gs://${split("/",substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix,5,-1))[0]}/dags/data_airflow.py
+    EOT
+  }
+  depends_on = [time_sleep.sleep_after_composer_creation,
+                time_sleep.wait_for_notification,
+                time_sleep.wait_for_cloud_function]
+}
+*/
 resource "google_bigquery_dataset" "bq_dataset_creation" {
   dataset_id                  = "corpor_sales_prediction_dataset"
   location                    = local.region
@@ -332,24 +470,3 @@ resource "google_bigquery_dataset" "bq_dataset_creation" {
     create_before_destroy = true
   }
 }
-/*
-resource "google_bigquery_table" "bq_sales_table_creation" {
-  dataset_id = google_bigquery_dataset.bq_dataset_creation.dataset_id
-  table_id   = "corpor_sales_prediction_table"
-  external_data_configuration {
-      autodetect = true
-      source_format = "PARQUET"
-      source_uris = ["gs://corpor-sales-data/df_sales_long/*.parquet"]
-  }
-}
-
-resource "google_bigquery_table" "bq_promo_table_creation" {
-  dataset_id = google_bigquery_dataset.bq_dataset_creation.dataset_id
-  table_id   = "corpor_promo_prediction_table"
-  external_data_configuration {
-      autodetect = true
-      source_format = "PARQUET"
-      source_uris = ["gs://corpor-sales-data/df_promo_long/*.parquet"]
-  }
-}
-*/

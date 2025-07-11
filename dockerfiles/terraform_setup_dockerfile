@@ -30,6 +30,7 @@ COPY shell_scripts/data_download.sh .
 COPY shell_scripts/run_terraform.sh .
 COPY terraform/ ./terraform/
 COPY data_preprocess/ ./data_preprocess/
+COPY cloud_function/ ./cloud_function/
 COPY key.json .
 
 RUN gcloud auth activate-service-account --key-file=key.json && \

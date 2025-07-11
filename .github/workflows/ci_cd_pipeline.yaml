@@ -1,8 +1,14 @@
 name: CI/CD pipeline
 on:
   push:
-    branches: [main]
+    branches: 
+      - main
+    paths:
+      - 'corpor_sales_dataform/**'
+      - 'terraform/**'
   pull_request:
+      paths:
+        - 'corpor_sales_dataform/**'
 
 jobs:
   deploy:
@@ -19,3 +25,22 @@ jobs:
         run: |
           gcloud auth activate-service-account --key-file=key.json
           gcloud config set project corporacion-sales-prediction
+    
+      - name: Create kaggle.json
+        run: |
+          mkdir -p ~/.kaggle/
+          "${{ secrets.KAGGLE_JSON }}" > ~/.kaggle/kaggle.json
+          cp ~/.kaggle/kaggle.json .
+      
+      - name: Download the data and setup the terraform
+        run: |
+          docker build -f dockerfiles/terraform_setup_dockerfile -t download-data-setup-terraform .
+      
+      - name: Run data download and terraform setup
+        run: |
+          docker run -rm \
+                     -v {{ github.workspace }}/key.json:/app/key/json \
+                     -e GOOGLE_APPLICATION_CREDENTIALS=/app/key.json \
+                     download-data-setup-terraform 
+      - name: Clean up the credentials
+        run: rm key.json
