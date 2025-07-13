@@ -32,7 +32,7 @@ def test_transform_train_data(spark):
         StructField('item_nbr', IntegerType())
         ])
     df = spark.createDataFrame(input_data, schema=schema)
-    blob = upload_if_not_exists('data/train.csv')
+    blob = upload_if_not_exists('corpor-sales-data', 'train.csv', 'data/train.csv', verbose=True)
     
     from data_preprocess.train_data_process import transform_data
     transformed_data = transform_data(df)
