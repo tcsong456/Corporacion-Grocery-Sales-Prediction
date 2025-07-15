@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Jun 14 20:37:16 2025
-
-@author: congx
-"""
 from google.cloud import storage
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, to_date

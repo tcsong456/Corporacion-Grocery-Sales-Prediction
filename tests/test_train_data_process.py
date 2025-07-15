@@ -1,24 +1,11 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import pytest
+from datetime import date
 from math import isclose, log1p
 from pyspark.sql.functions import col
-from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, FloatType, IntegerType, ByteType
 from data_preprocess.train_data_process import transform_data
-
-
-@pytest.fixture(scope='session')
-def spark():
-    spark = SparkSession \
-        .builder \
-        .appName('unit-tests') \
-        .master('local[*]') \
-        .getOrCreate()
-    spark.sparkContext.setLogLevel("ERROR")
-    yield spark
-    spark.stop()
 
 
 def test_transform_train_data(spark):
@@ -44,6 +31,10 @@ def test_transform_train_data(spark):
     assert isclose(data_list[1]['unit_sales'], log1p(1000.0), rel_tol=1e-5)
     assert isclose(data_list[2]['unit_sales'], log1p(50.0), rel_tol=1e-5)
     assert isclose(data_list[3]['unit_sales'], log1p(300.0), rel_tol=1e-5)
+    assert isinstance(data_list[0]['date'], date)
+    assert isinstance(data_list[1]['unit_sales'], float)
+    assert isinstance(data_list[2]['store_nbr'], int)
+    assert isinstance(data_list[3]['item_nbr'], int)
     assert data_list[0]['store_nbr'] == 1
     assert data_list[0]['item_nbr'] == 20
     assert data_list[-1]['store_nbr'] == 4
