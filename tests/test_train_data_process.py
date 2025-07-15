@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.insert(0,os.path.abspath(os.path.join(os.path.dirname(__file__),'..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import pytest
 from math import isclose, log1p
 from pyspark.sql.functions import col
@@ -36,8 +36,8 @@ def test_transform_train_data(spark):
         StructField('item_nbr', IntegerType())
         ])
     df = spark.createDataFrame(input_data, schema=schema)
-    
-    transformed_data = transform_data(df,0,1000)
+
+    transformed_data = transform_data(df, 0, 1000)
     data_list = transformed_data.collect()
 
     assert isclose(data_list[0]['unit_sales'], log1p(0.0), rel_tol=1e-5)
