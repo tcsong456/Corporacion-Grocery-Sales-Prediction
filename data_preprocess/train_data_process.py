@@ -3,14 +3,6 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import when, col, log1p, to_date
 from pyspark.sql.types import FloatType, IntegerType, ByteType
 
-bucket_name = "corpor-sales-data"
-train_bucket = "gs://" + bucket_name + "/train.csv"
-output_bucket = "gs://" + bucket_name + "/train/"
-
-spark = SparkSession.builder.appName('corpor_train_data_transformation').getOrCreate()
-spark.sparkContext.setLogLevel("ERROR")
-train = spark.read.format("csv").option("header", True).option("inferschema", True).load(train_bucket)
-
 
 def transform_data(df, min_value=0, max_value=100):
     df = df.fillna({'unit_sales': 0})
@@ -40,15 +32,23 @@ def transform_data(df, min_value=0, max_value=100):
     return df
 
 
-train = transform_data(train, min_value=0, max_value=1000)
+if __name__ == '__main__':
+    bucket_name = "corpor-sales-data"
+    train_bucket = "gs://" + bucket_name + "/train.csv"
+    output_bucket = "gs://" + bucket_name + "/train/"
 
+    spark = SparkSession.builder.appName('corpor_train_data_transformation').getOrCreate()
+    spark.sparkContext.setLogLevel("ERROR")
+    train = spark.read.format("csv").option("header", True).option("inferschema", True).load(train_bucket)
 
-train.write \
-    .format("parquet") \
-    .mode("overwrite") \
-    .save(output_bucket)
+    train = transform_data(train, min_value=0, max_value=1000)
 
-client = storage.Client()
-bucket = client.bucket(bucket_name)
-blob = bucket.blob('train.csv')
-blob.delete()
+    train.write \
+        .format("parquet") \
+        .mode("overwrite") \
+        .save(output_bucket)
+
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob('train.csv')
+    blob.delete()
