@@ -44,9 +44,10 @@ def test_concat_train_test_data(spark):
     assert df.columns == ['date', 'unit_sales', 'store_nbr', 'item_nbr']
     assert len(results) == 4
     assert results[2]['unit_sales'] is None
-    assert isinstance(results[0]['unit_sales'], float)
-    assert isinstance(results[0]['item_nbr'], int)
-    assert isinstance(results[0]['store_nbr'], int)
+    data_types = df.dtypes
+    assert dict(data_types)['unit_sales'] == 'float'
+    assert dict(data_types)['item_nbr'] == 'int'
+    assert dict(data_types)['store_nbr'] == 'tinyint'
     assert isinstance(results[0]['date'], date)
     assert isclose(results[0]['unit_sales'], log1p(25.0), rel_tol=1e-5)
     assert results[1]['unit_sales'] == 0
