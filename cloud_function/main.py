@@ -7,13 +7,11 @@ from google.auth.transport.requests import Request
 from google.auth import default
 from googleapiclient.discovery import build
 
-# Read environment variables
 PROJECT_ID = os.environ["PROJECT_ID"]
 REGION = os.environ["REGION"]
 COMPOSER_ENV = os.environ["COMPOSER_ENV"]
 DAG_ID = os.environ["DAG_ID"]
 
-# Build the Composer Admin API client
 creds, _ = default()
 composer = build("composer", "v1", credentials=creds, cache_discovery=False)
 
