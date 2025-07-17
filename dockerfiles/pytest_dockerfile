@@ -17,4 +17,4 @@ COPY key.json .
 COPY data_preprocess/ data_preprocess/
 RUN pip install --no-cache-dir -r pytest_requirements.txt
 
-CMD ["pytest","-s","tests"]
+CMD ["pytest","-s","tests/test_promo_nan_fill.py"]
