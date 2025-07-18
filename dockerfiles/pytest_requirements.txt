@@ -1,0 +1,7 @@
+pyspark
+pytest
+tqdm
+numpy
+pandas
+pyarrow
+google-cloud-storage
