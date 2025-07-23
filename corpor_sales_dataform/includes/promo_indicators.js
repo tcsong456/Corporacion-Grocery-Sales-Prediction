@@ -2,7 +2,8 @@ function promo_indicator_pivot(startDate,keyCol,refTable,prefix) {
     const dates = [];
     const groupCol = keyCol.join(",");
     const padding = n =>  String(n).padStart(2,'0');
-    const d0 = new Date(startDate),d1 = new Date(d0);
+    const [year, month, day] = startDate.split("-").map(Number);
+    const d0 = new Date(Date.UTC(year, month - 1, day)),d1 = new Date(d0);
     d1.setDate(d1.getDate() + 15);
     
     for (let d=new Date(d0);d<=d1;d.setDate(d.getDate()+1)) {
