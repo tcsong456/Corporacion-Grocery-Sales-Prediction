@@ -1,0 +1,14 @@
+config {
+    type: "assertion",
+    tags: ["unit_test"]
+}
+
+SELECT * FROM ${ref("item_promo_indicators_test_model_2017705")}
+WHERE NOT (
+    (item_nbr = 10 AND item_promo_0 = 10) OR
+    (item_nbr = 20 AND item_promo_4 = 9) OR
+    (item_nbr = 10 AND item_promo_6 = 12) OR
+    (item_nbr = 10 AND item_promo_10 = 7) OR
+    (item_nbr = 20 AND item_promo_0 is NULL) OR
+    (item_nbr = 10 AND item_promo_4 is NULL)
+)
