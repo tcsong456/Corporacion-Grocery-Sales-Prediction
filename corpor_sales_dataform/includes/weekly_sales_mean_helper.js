@@ -5,9 +5,9 @@ function buildWeeklyDates(startDate,period) {
     for (let i=0;i<period;i++) {
         const currentDate = new Date(startDate)
         currentDate.setDate(currentDate.getDate()+i*7)
-        const y = currentDate.getUTCFullYear(),
-              m = padding(currentDate.getUTCMonth()+1),
-              dd = padding(currentDate.getUTCDate());
+        const y = currentDate.getFullYear(),
+              m = padding(currentDate.getMonth()+1),
+              dd = padding(currentDate.getDate());
         const d = `${y}-${m}-${dd}`;
         dates.push(d)
     }

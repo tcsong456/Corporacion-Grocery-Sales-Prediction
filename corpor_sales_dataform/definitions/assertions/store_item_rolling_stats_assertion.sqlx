@@ -1,0 +1,25 @@
+config {
+    type: "assertion",
+    tags: ["unit_test"]
+}
+
+SELECT * FROM ${ref("store_item_rolling_stats_2017621")}
+WHERE store_nbr = 1 AND item_nbr = 10
+AND NOT (
+    store_item_unit_sales_min_7 = 0
+    AND store_item_unit_sales_max_7 = 11
+    AND store_item_unit_sales_mean_7 = 5.3333
+    AND store_item_unit_sales_max_14 = 25
+    AND store_item_unit_sales_mean_14 = 8.4
+    AND store_item_unit_sales_median_14 = 5
+    AND store_item_unit_sales_std_14 = 10.2372
+    AND store_item_unit_sales_decay_sum_14 = 18.7583
+)
+UNION ALL
+SELECT * FROM ${ref("store_item_rolling_stats_2017621")}
+WHERE store_nbr = 2 AND item_nbr = 20
+AND NOT (
+    store_item_unit_sales_std_7 = 0
+    AND store_item_unit_sales_decay_sum_7 = 0
+    AND store_item_unit_sales_mean_7 = 0
+)

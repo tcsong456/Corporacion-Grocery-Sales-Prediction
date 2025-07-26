@@ -1,0 +1,40 @@
+config {
+  type: "test",
+  dataset: "full_data"
+}
+
+input "sales_data_table" {
+    SELECT 1 AS store_nbr, 96995 AS item_nbr, '2024-01-01' AS date, 0 AS unit_sales, 'GROCERY I' AS family, 1093 AS class,
+    0 AS perishable, 'Quito' AS city, 'Pichincha' AS state, 'D' AS type, 13 AS cluster
+    UNION ALL
+    SELECT 2, 103501, '2024-01-02', 0.693, 'CLEANING', 3008, 0, 'Quito', 'Pichincha', 'D', 13
+    UNION ALL
+    SELECT 3, 103665, '2024-01-03', 1.791, 'BREAD/BAKERY', 2124, 1, 'Latacunga', 'Cotopaxi', 'C', 15
+    UNION ALL
+    SELECT 4, 172995, '2024-01-04', 0, 'AUTOMOTIVE', 6824, 0, 'Riobamba', 'Chimborazo', 'A', 7
+    UNION ALL
+    SELECT 5, 208384, '2024-01-05', 1.099, 'EGGS', 2502, 1,'Puyo', 'Pastaza', 'B', 16
+}
+
+input "promo_data_table" {
+    SELECT 1 AS store_nbr, 96995 AS item_nbr, '2024-01-01' AS date, 0 AS onpromotion
+    UNION ALL
+    SELECT 2, 103501, '2024-01-02', 0
+    UNION ALL
+    SELECT 3, 103665, '2024-01-03', 1
+    UNION ALL
+    SELECT 4, 172995, '2024-01-04', 1
+    UNION ALL
+    SELECT 5, 208384, '2024-01-05', 0
+}
+
+SELECT 1 AS store_nbr, 96995 AS item_nbr, '2024-01-01' AS date, 0 AS unit_sales, 'GROCERY I' AS family, 1093 AS class,
+0 AS perishable, 'Quito' AS city, 'Pichincha' AS state, 'D' AS type, 13 AS cluster, 0 AS onpromotion
+UNION ALL
+SELECT 2, 103501, '2024-01-02', 0.693, 'CLEANING', 3008, 0, 'Quito', 'Pichincha', 'D', 13, 0
+UNION ALL
+SELECT 3, 103665, '2024-01-03', 1.791, 'BREAD/BAKERY', 2124, 1, 'Latacunga', 'Cotopaxi', 'C', 15, 1
+UNION ALL
+SELECT 4, 172995, '2024-01-04', 0, 'AUTOMOTIVE', 6824, 0, 'Riobamba', 'Chimborazo', 'A', 7, 1
+UNION ALL
+SELECT 5, 208384, '2024-01-05', 1.099, 'EGGS', 2502, 1,'Puyo', 'Pastaza', 'B', 16, 0
