@@ -1,0 +1,21 @@
+config {
+    type: "table",
+    name: "mock_store_item_rolling_stats_2017621",
+    tags: ["unit_test"]
+}
+
+SELECT 1 AS store_nbr, 10 AS item_nbr, DATE '2017-6-20' AS date, 0 AS unit_sales
+UNION ALL
+SELECT 1, 10, DATE '2017-6-18', 5
+UNION ALL
+SELECT 1, 10, DATE '2017-6-16', 11
+UNION ALL
+SELECT 1, 10, DATE '2017-6-12', 1
+UNION ALL
+SELECT 1, 10, DATE '2017-6-08', 25
+UNION ALL
+SELECT 1, 10, DATE '2017-6-06', 100
+UNION ALL
+SELECT 2, 20, DATE '2017-6-19', 0
+UNION ALL
+SELECT 2, 20, DATE '2017-6-14', 0

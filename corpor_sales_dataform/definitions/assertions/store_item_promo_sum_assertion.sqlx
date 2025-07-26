@@ -1,0 +1,24 @@
+config {
+    type: "assertion",
+    tags: ["unit_test"]
+}
+
+SELECT * FROM ${ref("store_item_promo_sum_test_model_2017614")}
+WHERE store_nbr = 1 AND item_nbr = 10
+AND NOT (
+    store_item_promo_sum_future_15 = 2
+    AND store_item_promo_sum_future_7 = 1
+)
+UNION ALL
+SELECT * FROM ${ref("store_item_promo_sum_test_model_2017614")}
+WHERE store_nbr = 2 AND item_nbr = 20
+AND NOT (
+    store_item_promo_sum_future_15 = 1
+    AND store_item_promo_sum_future_7 = 0
+)
+UNION ALL
+SELECT * FROM ${ref("store_item_promo_sum_test_model_2017614")}
+WHERE store_nbr = 3 AND item_nbr = 30
+AND NOT (
+    store_item_promo_sum_future_15 = 0
+)

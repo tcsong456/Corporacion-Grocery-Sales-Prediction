@@ -1,6 +1,6 @@
 config {
     type: "table",
-    name: "class_store_no_promo_test_model_2017614",
+    name: "class_store_no_promo_decay_sales_test_model_2017614",
     tags: ["unit_test"]
 }
 

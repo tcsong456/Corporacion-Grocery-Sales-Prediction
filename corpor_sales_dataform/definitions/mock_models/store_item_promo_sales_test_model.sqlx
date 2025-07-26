@@ -1,0 +1,16 @@
+config {
+    type: "table",
+    name: "store_item_has_promo_test_model_2017621",
+    tags: ["unit_test"]
+}
+
+SELECT
+    store_nbr,item_nbr,
+    ROUND(AVG(CASE WHEN onpromotion >0 AND date BETWEEN
+        DATE_SUB(DATE '2017-6-21',INTERVAL 7 DAY) AND DATE_SUB(DATE '2017-6-21',INTERVAL 1 DAY)
+        THEN unit_sales ELSE NULL END),4) AS store_item_has_promo_mean_7,
+    ROUND(AVG(CASE WHEN onpromotion >0 AND date BETWEEN
+        DATE_SUB(DATE '2017-6-21',INTERVAL 7 DAY) AND DATE_SUB(DATE '2017-6-21',INTERVAL 14 DAY)
+        THEN unit_sales ELSE NULL END),4) AS store_item_has_promo_mean_14
+    FROM ${ref("mock_store_item_promo_sales_data_2017621")}
+    GROUP BY store_nbr,item_nbr

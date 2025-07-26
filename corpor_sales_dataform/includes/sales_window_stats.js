@@ -9,7 +9,7 @@ function rolling_window_stats(targetDate,window_sizes,decay_rate,keyCols,refTabl
                                              STDDEV_SAMP(unit_sales) AS unit_sales_std,
                                              SUM(unit_sales *
                                              POWER(${decay_rate},DATE_DIFF(DATE('${targetDate}'),date,DAY)-1)) AS unit_sales_decay_sum,
-                                             ${w} as source
+                                             ${w} AS source
                                              FROM ${refTable}
                                              WHERE date BETWEEN
                                              DATE_SUB(DATE('${targetDate}'),INTERVAL ${w} DAY)
