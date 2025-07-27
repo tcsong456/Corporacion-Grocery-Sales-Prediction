@@ -15,8 +15,8 @@ ENV PATH=$JAVA_HOME/bin:$PATH
 WORKDIR app/
 COPY tests/ tests/
 COPY dockerfiles/pytest_requirements.txt .
-COPY key.json .
+#COPY key.json .
 COPY data_preprocess/ data_preprocess/
 RUN pip install --no-cache-dir -r pytest_requirements.txt
 
-CMD ["pytest","-q","-s","tests","--jnitxml=junit-python.xml"]
+CMD ["pytest","-q","-s","tests","--junitxml=junit-python.xml"]
