@@ -53,8 +53,7 @@ jobs:
           fi
       - name: Write GCP SA key
         if: ${{ secrets.GCP_KEY_JSON != '' }}
-        run: |
-          echo ${{ secrets.GCP_KEY_JSON }} > key.json
+        run: echo "${{ secrets.GCP_KEY_JSON }}" > key.json
       - name: Run pytest unit-test in a container
         run: |
           set -e
