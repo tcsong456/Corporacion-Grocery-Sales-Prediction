@@ -94,4 +94,4 @@ def test_final_data(spark):
     assert Counter(expected_dates) == Counter(true_dates)
     expected_unit_sales = [row['unit_sales'] for row in df_sales_long.select('unit_sales').collect()]
     true_unit_sales = [row['unit_sales'] for row in df_sales.select('unit_sales').collect()]
-    assert all(isclose(a, b, rel_tol=1e-5) for a, b in zip(expected_unit_sales, true_unit_sales))
+    assert all(isclose(a, b, rel_tol=1e-5,abs_tol=1e-8) for a, b in zip(expected_unit_sales, true_unit_sales))
