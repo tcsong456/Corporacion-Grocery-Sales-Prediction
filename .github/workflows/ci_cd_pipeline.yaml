@@ -38,7 +38,7 @@ jobs:
       - uses: docker/setup-buildx-action@v3
       - name: Build pytest image
         uses: docker/build-push-actions@v6
-        with
+        with:
           context: .
           file: dockerfiles/pytest_dockerfile
           tags: pytest-unit-test:latest
