@@ -19,4 +19,4 @@ COPY key.json .
 COPY data_preprocess/ data_preprocess/
 RUN pip install --no-cache-dir -r pytest_requirements.txt
 
-CMD ["pytest","-s","tests"]
+CMD ["pytest","-q","-s","tests","--jnitxml=junit-python.xml"]
