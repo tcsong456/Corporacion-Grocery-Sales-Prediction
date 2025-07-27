@@ -1,46 +1,31 @@
-name: CI/CD pipeline
+name: Corpor-sales-CI
 on:
   push:
-    branches: 
+    branches:
       - main
-    paths:
-      - 'corpor_sales_dataform/**'
-      - 'terraform/**'
   pull_request:
-      paths:
-        - 'corpor_sales_dataform/**'
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      
+      - uses: actions/python@v5
+        with:
+          python-version: "3.10"
+      
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+      
+      - name: Install deps
+        run: |
+          pip install -r requirements.txt
     
-      - name: Decode GCP key
+      - name: Flake8 linting test
         run: |
-          echo "${{ secrets.GCP_KEY_JSON }}" | base64 -d > key.json
-      
-      - name: Activate gcloud
-        run: |
-          gcloud auth activate-service-account --key-file=key.json
-          gcloud config set project corporacion-sales-prediction
-    
-      - name: Create kaggle.json
-        run: |
-          mkdir -p ~/.kaggle/
-          "${{ secrets.KAGGLE_JSON }}" > ~/.kaggle/kaggle.json
-          cp ~/.kaggle/kaggle.json .
-      
-      - name: Download the data and setup the terraform
-        run: |
-          docker build -f dockerfiles/terraform_setup_dockerfile -t download-data-setup-terraform .
-      
-      - name: Run data download and terraform setup
-        run: |
-          docker run -rm \
-                     -v {{ github.workspace }}/key.json:/app/key/json \
-                     -e GOOGLE_APPLICATION_CREDENTIALS=/app/key.json \
-                     download-data-setup-terraform 
-      - name: Clean up the credentials
-        run: rm key.json
+          flake8 tests/
