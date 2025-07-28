@@ -37,6 +37,13 @@ def test_gcs_read_write(gcs_spark):
     hadoop_ver = gcs_spark._jvm.org.apache.hadoop.util.VersionInfo.getVersion()
     log.info("Hadoop: %s", hadoop_ver)
     log.info("GCS connector present: %s", os.path.exists("/opt/jars/gcs-connector.jar"))
+    log.info("GCS connector present on disk: %s", os.path.exists("/opt/jars/gcs-connector-hadoop3-2.2.x.jar"))
+    jars = list(gcs_spark.sparkContext._jsc.sc().listJars())
+    log.info("Spark classpath jars: %s", jars)
+    hc = gcs_spark._jsc.hadoopConfiguration()
+    for k in ["fs.gs.impl", "fs.AbstractFileSystem.gs.impl",
+              "google.cloud.auth.type", "fs.gs.project.id"]:
+        log.info("%s = %s", k, hc.get(k))
 
     create_bucket_and_upload_data('integration_test_io', 'integration_test.csv', 'data/test.csv')
     test_id = uuid.uuid4().hex[:8]
