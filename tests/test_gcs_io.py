@@ -37,13 +37,18 @@ def test_gcs_read_write(gcs_spark):
     hadoop_ver = gcs_spark._jvm.org.apache.hadoop.util.VersionInfo.getVersion()
     log.info("Hadoop: %s", hadoop_ver)
     log.info("GCS connector present: %s", os.path.exists("/opt/jars/gcs-connector.jar"))
-    log.info("GCS connector present on disk: %s", os.path.exists("/opt/jars/gcs-connector-hadoop3-2.2.x.jar"))
-    jars = list(gcs_spark.sparkContext._jsc.sc().listJars())
-    log.info("Spark classpath jars: %s", jars)
+    log.info("GCS connector present on disk: %s", os.path.exists("/opt/jars/gcs-connector-hadoop3-2.2.17.jar"))
+    try:
+        gcs_spark._jvm.java.lang.Class.forName(
+            "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem"
+        )
+        print("GCS connector class is on the classpath")
+    except Exception as e:
+        print("GCS connector class NOT found:", e)
+    print("spark.jars =", gcs_spark.sparkContext.getConf().get("spark.jars", ""))
     hc = gcs_spark._jsc.hadoopConfiguration()
-    for k in ["fs.gs.impl", "fs.AbstractFileSystem.gs.impl",
-              "google.cloud.auth.type", "fs.gs.project.id"]:
-        log.info("%s = %s", k, hc.get(k))
+    print("fs.gs.impl =", hc.get("fs.gs.impl"))
+    print("fs.AbstractFileSystem.gs.impl =", hc.get("fs.AbstractFileSystem.gs.impl"))
 
     create_bucket_and_upload_data('integration_test_io', 'integration_test.csv', 'data/test.csv')
     test_id = uuid.uuid4().hex[:8]
