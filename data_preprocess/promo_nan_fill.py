@@ -24,8 +24,7 @@ def promo_fill(df):
     mean_rows = df_pivot.select([F.mean(col(c)).alias(c) for c in columns]).first()
     mean_rows_dict = {c: (mean_rows[c] if mean_rows[c] is not None else 0) for c in columns}
 
-    # window = Window.orderBy('store_nbr', 'item_nbr')
-    window = Window.partitionBy('store_nbr', 'item_nbr').orderBy('date')
+    window = Window.orderBy('store_nbr', 'item_nbr')
     df_pivot = df_pivot.withColumn('row_id', row_number().over(window))
     df_promo = df_pivot.select(['row_id'] + columns).orderBy('row_id')
     output_schema = StructType(

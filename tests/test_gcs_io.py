@@ -65,7 +65,7 @@ def test_gcs_read_write(spark):
 
     start_write_time = time.time()
     df_promo_sum \
-        .repartition(4) \
+        .repartition(8) \
         .write \
         .mode('overwrite') \
         .parquet(output_path)
