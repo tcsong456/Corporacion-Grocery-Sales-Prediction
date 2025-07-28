@@ -42,13 +42,13 @@ def test_gcs_read_write(gcs_spark):
         gcs_spark._jvm.java.lang.Class.forName(
             "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem"
         )
-        print("GCS connector class is on the classpath")
+        log.info("GCS connector class is on the classpath")
     except Exception as e:
-        print("GCS connector class NOT found:", e)
-    print("spark.jars =", gcs_spark.sparkContext.getConf().get("spark.jars", ""))
+        log.info("GCS connector class NOT found:", e)
+    log.info("spark.jars =", gcs_spark.sparkContext.getConf().get("spark.jars", ""))
     hc = gcs_spark._jsc.hadoopConfiguration()
-    print("fs.gs.impl =", hc.get("fs.gs.impl"))
-    print("fs.AbstractFileSystem.gs.impl =", hc.get("fs.AbstractFileSystem.gs.impl"))
+    log.info("fs.gs.impl =", hc.get("fs.gs.impl"))
+    log.info("fs.AbstractFileSystem.gs.impl =", hc.get("fs.AbstractFileSystem.gs.impl"))
 
     create_bucket_and_upload_data('integration_test_io', 'integration_test.csv', 'data/test.csv')
     test_id = uuid.uuid4().hex[:8]
