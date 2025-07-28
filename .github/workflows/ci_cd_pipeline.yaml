@@ -52,13 +52,7 @@ jobs:
             exit 1
           fi
       - name: Write GCP SA key
-        run: echo "${{ secrets.GCP_KEY_JSON }}" > key.json
-      - name: Debug Show key.json before Docker
-        run: |
-          echo "Listing workspace:"
-          ls -l "${{ github.workspace }}"
-          echo "Contents of key.json:"
-          head -n 5 "${{ github.workspace }}/key.json"
+        run: printf '%s' "${{ secrets.GCP_KEY_JSON }}" > key.json
       - name: Run pytest unit-test in a container
         run: |
           set -e

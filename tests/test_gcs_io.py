@@ -1,12 +1,13 @@
-import os
+# import os
 import uuid
 import time
-from google.cloud import storage
 from pyspark.sql import functions as F
 from pyspark.sql.types import StructType, StructField, IntegerType, ByteType
 
-key_path = os.path.join(os.path.dirname(__file__), '..', 'key.json')
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = key_path
+# key_path = os.path.join(os.path.dirname(__file__), '..', 'key.json')
+# os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = key_path
+
+from google.cloud import storage
 
 
 def create_bucket_and_upload_data(bucket_name, blob_name, data_path):
