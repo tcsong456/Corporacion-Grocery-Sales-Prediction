@@ -53,7 +53,7 @@ jobs:
           fi
       - name: Write GCP SA key
         run: echo "${{ secrets.GCP_KEY_JSON }}" > key.json
-      - name: Debug: Show key.json before Docker
+      - name: Debug Show key.json before Docker
         run: |
           echo "Listing workspace:"
           ls -l "${{ github.workspace }}"
