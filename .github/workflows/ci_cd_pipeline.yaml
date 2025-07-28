@@ -54,7 +54,7 @@ jobs:
       - name: Write GCP SA key
         run: |
           printf '%s' '${{ secrets.GCP_KEY_JSON }}' > key.json
-          wc -c key.json   # should be > 0 bytes
+          wc -c key.json
           python - <<'PY'
           import json, os
           key_path = "key.json"
