@@ -26,6 +26,8 @@ def gcs_spark():
         .master('local[*]') \
         .getOrCreate()
     print("fs.gs.impl:", spark._jsc.hadoopConfiguration().get("fs.gs.impl"))
-    print("Jars:", list(spark.sparkContext._jsc.sc().listJars()))
+    jars = spark._jvm.scala.collection.JavaConversions.asJavaCollection(
+        spark.sparkContext._jsc.sc().listJars())
+    print("GCS connector found:", any("gcs-connector" in str(jar) for jar in jars))
     yield spark
     spark.stop()
