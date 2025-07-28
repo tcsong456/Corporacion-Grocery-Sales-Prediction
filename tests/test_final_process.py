@@ -93,6 +93,9 @@ def test_final_data(spark):
     expected_dates = [datetime.strptime(c.date, "%Y-%m-%d").date() for c in df_sales_long.select('date').collect()]
     true_dates = [c.date for c in df_sales.select('date').collect()]
     assert Counter(expected_dates) == Counter(true_dates)
+
+    df_sales_long = df_sales_long.sort(*df_sales_long.columns)
+    df_sales = df_sales.sort(*df_sales.columns)
     expected_unit_sales = np.array([row['unit_sales'] for row in df_sales_long.select('unit_sales').collect()])
     true_unit_sales = np.array([row['unit_sales'] for row in df_sales.select('unit_sales').collect()])
     # assert all(isclose(a, b, rel_tol=1e-5, abs_tol=1e-8) for a, b in zip(expected_unit_sales, true_unit_sales))
