@@ -31,13 +31,13 @@ def compute_ordered_hash(df):
 
 
 def test_gcs_read_write(gcs_spark):
-    import os
+    # import os
     import logging
     log = logging.getLogger(__name__)
-    hadoop_ver = gcs_spark._jvm.org.apache.hadoop.util.VersionInfo.getVersion()
-    log.info("Hadoop: %s", hadoop_ver)
-    log.info("GCS connector present: %s", os.path.exists("/opt/jars/gcs-connector.jar"))
-    log.info("GCS connector present on disk: %s", os.path.exists("/opt/jars/gcs-connector-hadoop3-2.2.17.jar"))
+    # hadoop_ver = gcs_spark._jvm.org.apache.hadoop.util.VersionInfo.getVersion()
+    # log.info("Hadoop: %s", hadoop_ver)
+    # log.info("GCS connector present: %s", os.path.exists("/opt/jars/gcs-connector.jar"))
+    # log.info("GCS connector present on disk: %s", os.path.exists("/opt/jars/gcs-connector-hadoop3-2.2.17.jar"))
     try:
         gcs_spark._jvm.java.lang.Class.forName(
             "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem"
