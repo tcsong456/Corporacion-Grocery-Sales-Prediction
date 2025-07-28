@@ -2,6 +2,7 @@ FROM python:3.10-bullseye
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     openjdk-17-jdk-headless \
+    curl \
     ca-certificates \
     gnupg && \
     apt-get clean && \
@@ -15,8 +16,10 @@ ENV PATH=$JAVA_HOME/bin:$PATH
 WORKDIR app/
 COPY tests/ tests/
 COPY dockerfiles/pytest_requirements.txt .
-#COPY key.json .
 COPY data_preprocess/ data_preprocess/
+RUN mkdir -p /opt/jars && \
+    curl -L -o /opt/jars/gcs-connector.jar \
+    https://repo1.maven.org/maven2/com/google/cloud/bigdataoss/gcs-connector/hadoop3-2.2.5/gcs-connector-hadoop3-2.2.5-shaded.jar
 RUN pip install --no-cache-dir -r pytest_requirements.txt
 
 CMD ["pytest","-q","-s","tests","--junitxml=junit-python.xml"]
