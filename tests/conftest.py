@@ -19,10 +19,10 @@ def gcs_spark():
     spark = SparkSession \
         .builder \
         .appName('integration_test') \
-        .config("spark.jars.packages", "com.google.cloud.bigdataoss:gcs-connector:hadoop3-2.2.5") \
+        .config("spark.jars.packages", "com.google.cloud.bigdataoss:gcs-connector:hadoop3-2.2.17") \
         .config("spark.hadoop.fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem") \
         .config("spark.hadoop.google.cloud.auth.service.account.enable", "true") \
-        .config("spark.hadoop.google.cloud.auth.service.account.json.keyfile", "key.json") \
+        .config("spark.hadoop.google.cloud.auth.type", "APPLICATION_DEFAULT") \
         .master('local[*]') \
         .getOrCreate()
     yield spark
