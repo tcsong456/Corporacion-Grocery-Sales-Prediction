@@ -93,7 +93,7 @@ def test_gcs_read_write(spark):
     write_duration = time.time() - start_write_time
     assert write_duration < 30.0
 
-    df_promo_test = gcs_spark.read.parquet(output_path)
+    df_promo_test = spark.read.parquet(output_path)
     assert df_promo_test.schema == df_test_schema
 
     df1_hash = compute_ordered_hash(df_promo_test)
