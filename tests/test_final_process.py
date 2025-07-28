@@ -1,7 +1,8 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from math import log1p, isclose
+import numpy as np
+from math import log1p
 from collections import Counter
 from datetime import date, datetime
 from data_preprocess.final_process import merge_full_data
@@ -92,6 +93,7 @@ def test_final_data(spark):
     expected_dates = [datetime.strptime(c.date, "%Y-%m-%d").date() for c in df_sales_long.select('date').collect()]
     true_dates = [c.date for c in df_sales.select('date').collect()]
     assert Counter(expected_dates) == Counter(true_dates)
-    expected_unit_sales = [row['unit_sales'] for row in df_sales_long.select('unit_sales').collect()]
-    true_unit_sales = [row['unit_sales'] for row in df_sales.select('unit_sales').collect()]
-    assert all(isclose(a, b, rel_tol=1e-5, abs_tol=1e-8) for a, b in zip(expected_unit_sales, true_unit_sales))
+    expected_unit_sales = np.array([row['unit_sales'] for row in df_sales_long.select('unit_sales').collect()])
+    true_unit_sales = np.array([row['unit_sales'] for row in df_sales.select('unit_sales').collect()])
+    # assert all(isclose(a, b, rel_tol=1e-5, abs_tol=1e-8) for a, b in zip(expected_unit_sales, true_unit_sales))
+    assert np.allclose(expected_unit_sales, true_unit_sales, rtol=1e-5, atol=1e-8)

@@ -56,8 +56,7 @@ def test_gcs_read_write(spark):
         .withColumn(
             'promo_sum', F.col('promo_sum').cast(IntegerType())
             )
-    df_promo_sum = df_promo_sum.persist()
-    df_promo_sum.count()
+
     df_test_schema = StructType([
         StructField('store_nbr', ByteType()),
         StructField('item_nbr', IntegerType()),
@@ -66,6 +65,7 @@ def test_gcs_read_write(spark):
 
     start_write_time = time.time()
     df_promo_sum \
+        .repartition(4) \
         .write \
         .mode('overwrite') \
         .parquet(output_path)
