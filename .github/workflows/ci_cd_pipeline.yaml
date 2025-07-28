@@ -47,10 +47,12 @@ jobs:
           cache-to: type=gha,mode=max
       - name: Check for GCP key
         run: |
-          if [ -z "${{ secrets.GCP_KEY_JSON }}" ];then
+          if [ -z "$GCP_KEY_JSON" ];then
             echo "no GCP key is saved on github as secret keys,please download the GCP key and save it as github secret first"
             exit 1
           fi
+        env:
+          GCP_KEY_JSON: ${{ secrets.GCP_KEY_JSON }}
       - name: Write GCP SA key
 #        run: printf '%s' "${{ secrets.GCP_KEY_JSON }}" > key.json
          run: |
@@ -58,10 +60,11 @@ jobs:
             wc -c key.json   # should be > 0 bytes
             python - <<'PY'
             import json, os
-            p = os.environ.get("key.json")
-            print("Validating:", p)
-            json.load(open(p))
-            print("JSON OK")
+            key_path = "key.json"
+            print("Validating:", key_path)
+            with open(key_path) as f:
+                json.load(f)
+            print("✅ JSON OK")
             PY
       - name: Run pytest unit-test in a container
         run: |
