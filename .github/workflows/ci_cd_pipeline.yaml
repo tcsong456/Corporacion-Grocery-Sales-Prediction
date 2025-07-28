@@ -53,12 +53,18 @@ jobs:
           fi
       - name: Write GCP SA key
         run: echo "${{ secrets.GCP_KEY_JSON }}" > key.json
+      - name: Debug: Show key.json before Docker
+        run: |
+          echo "Listing workspace:"
+          ls -l "${{ github.workspace }}"
+          echo "Contents of key.json:"
+          head -n 5 "${{ github.workspace }}/key.json"
       - name: Run pytest unit-test in a container
         run: |
           set -e
-          docker run --rm -v ${{ github.workspace }}:/app \
+          docker run --rm -v "${{ github.workspace }}:/app" \
           -e GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/key.json \
-          $( [ -f key.json ] && echo '--mount type=bind,src=${{ github.workspace }}/key.json,dst=/run/secrets/key.json' ) \
+          $( [ -f key.json ] && echo --mount type=bind,src="${{ github.workspace }}/key.json",dst=/run/secrets/key.json ) \
           pytest-unit-test:latest
       
       - name: Upload Jnit report
