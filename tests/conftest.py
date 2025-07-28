@@ -1,3 +1,4 @@
+import os
 import pytest
 from pyspark.sql import SparkSession
 
@@ -16,6 +17,10 @@ def spark():
 
 @pytest.fixture(scope='session')
 def gcs_spark():
+    spark_ = SparkSession.builder.getOrCreate()
+    hadoop_ver = spark_._jvm.org.apache.hadoop.util.VersionInfo.getVersion()
+    print("Hadoop:", hadoop_ver)
+    print(os.path.exists("/opt/jars/gcs-connector.jar")) 
     spark = SparkSession \
         .builder \
         .appName('integration_test') \
@@ -25,9 +30,5 @@ def gcs_spark():
         .config("spark.hadoop.google.cloud.auth.type", "APPLICATION_DEFAULT") \
         .master('local[*]') \
         .getOrCreate()
-    print("fs.gs.impl:", spark._jsc.hadoopConfiguration().get("fs.gs.impl"))
-    jars = spark._jvm.scala.collection.JavaConversions.asJavaCollection(
-        spark.sparkContext._jsc.sc().listJars())
-    print("GCS connector found:", any("gcs-connector" in str(jar) for jar in jars))
     yield spark
     spark.stop()
