@@ -32,23 +32,23 @@ def compute_ordered_hash(df):
 
 def test_gcs_read_write(spark):
     # import os
-    import logging
-    log = logging.getLogger(__name__)
+    # import logging
+    # log = logging.getLogger(__name__)
     # hadoop_ver = gcs_spark._jvm.org.apache.hadoop.util.VersionInfo.getVersion()
     # log.info("Hadoop: %s", hadoop_ver)
     # log.info("GCS connector present: %s", os.path.exists("/opt/jars/gcs-connector.jar"))
     # log.info("GCS connector present on disk: %s", os.path.exists("/opt/jars/gcs-connector-hadoop3-2.2.17.jar"))
-    try:
-        spark._jvm.java.lang.Class.forName(
-            "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem"
-        )
-        log.info("GCS connector class is on the classpath")
-    except Exception as e:
-        log.info(f"GCS connector class NOT found:{e}")
-    log.info("spark.jars =", spark.sparkContext.getConf().get("spark.jars", ""))
-    hc = spark._jsc.hadoopConfiguration()
-    log.info("fs.gs.impl =", hc.get("fs.gs.impl"))
-    log.info("fs.AbstractFileSystem.gs.impl =", hc.get("fs.AbstractFileSystem.gs.impl"))
+    # try:
+    #     spark._jvm.java.lang.Class.forName(
+    #         "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem"
+    #     )
+    #     log.info("GCS connector class is on the classpath")
+    # except Exception as e:
+    #     log.info(f"GCS connector class NOT found:{e}")
+    # log.info("spark.jars =", spark.sparkContext.getConf().get("spark.jars", ""))
+    # hc = spark._jsc.hadoopConfiguration()
+    # log.info("fs.gs.impl =", hc.get("fs.gs.impl"))
+    # log.info("fs.AbstractFileSystem.gs.impl =", hc.get("fs.AbstractFileSystem.gs.impl"))
 
     create_bucket_and_upload_data('integration_test_io', 'integration_test.csv', 'data/test.csv')
     test_id = uuid.uuid4().hex[:8]
