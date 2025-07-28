@@ -31,6 +31,13 @@ def compute_ordered_hash(df):
 
 
 def test_gcs_read_write(gcs_spark):
+    import os
+    import logging
+    log = logging.getLogger(__name__)
+    hadoop_ver = gcs_spark._jvm.org.apache.hadoop.util.VersionInfo.getVersion()
+    log.info("Hadoop: %s", hadoop_ver)
+    log.info("GCS connector present: %s", os.path.exists("/opt/jars/gcs-connector.jar"))
+
     create_bucket_and_upload_data('integration_test_io', 'integration_test.csv', 'data/test.csv')
     test_id = uuid.uuid4().hex[:8]
     input_path = "gs://integration_test_io/integration_test.csv"
