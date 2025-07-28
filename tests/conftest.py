@@ -20,7 +20,7 @@ def gcs_spark():
     spark_ = SparkSession.builder.getOrCreate()
     hadoop_ver = spark_._jvm.org.apache.hadoop.util.VersionInfo.getVersion()
     print("Hadoop:", hadoop_ver)
-    print(os.path.exists("/opt/jars/gcs-connector.jar")) 
+    print(os.path.exists("/opt/jars/gcs-connector.jar"))
     spark = SparkSession \
         .builder \
         .appName('integration_test') \
