@@ -25,5 +25,7 @@ def gcs_spark():
         .config("spark.hadoop.google.cloud.auth.type", "APPLICATION_DEFAULT") \
         .master('local[*]') \
         .getOrCreate()
+    print("fs.gs.impl:", spark._jsc.hadoopConfiguration().get("fs.gs.impl"))
+    print("Jars:", list(spark.sparkContext._jsc.sc().listJars()))
     yield spark
     spark.stop()
