@@ -44,7 +44,7 @@ def test_gcs_read_write(gcs_spark):
         )
         log.info("GCS connector class is on the classpath")
     except Exception as e:
-        log.info("GCS connector class NOT found:", e)
+        log.info(f"GCS connector class NOT found:{e}")
     log.info("spark.jars =", gcs_spark.sparkContext.getConf().get("spark.jars", ""))
     hc = gcs_spark._jsc.hadoopConfiguration()
     log.info("fs.gs.impl =", hc.get("fs.gs.impl"))
