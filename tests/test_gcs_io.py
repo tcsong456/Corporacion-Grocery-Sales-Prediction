@@ -30,7 +30,7 @@ def compute_ordered_hash(df):
              .collect()[0]['final_hash']
 
 
-def test_gcs_read_write(gcs_spark):
+def test_gcs_read_write(spark):
     # import os
     import logging
     log = logging.getLogger(__name__)
@@ -39,14 +39,14 @@ def test_gcs_read_write(gcs_spark):
     # log.info("GCS connector present: %s", os.path.exists("/opt/jars/gcs-connector.jar"))
     # log.info("GCS connector present on disk: %s", os.path.exists("/opt/jars/gcs-connector-hadoop3-2.2.17.jar"))
     try:
-        gcs_spark._jvm.java.lang.Class.forName(
+        spark._jvm.java.lang.Class.forName(
             "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem"
         )
         log.info("GCS connector class is on the classpath")
     except Exception as e:
         log.info(f"GCS connector class NOT found:{e}")
-    log.info("spark.jars =", gcs_spark.sparkContext.getConf().get("spark.jars", ""))
-    hc = gcs_spark._jsc.hadoopConfiguration()
+    log.info("spark.jars =", spark.sparkContext.getConf().get("spark.jars", ""))
+    hc = spark._jsc.hadoopConfiguration()
     log.info("fs.gs.impl =", hc.get("fs.gs.impl"))
     log.info("fs.AbstractFileSystem.gs.impl =", hc.get("fs.AbstractFileSystem.gs.impl"))
 
@@ -56,7 +56,7 @@ def test_gcs_read_write(gcs_spark):
     output_path = f"gs://integration_test_io/test_output_{test_id}.parquet"
 
     start_read_time = time.time()
-    df_test = gcs_spark.read.option('header', 'true').csv(input_path)
+    df_test = spark.read.option('header', 'true').csv(input_path)
     read_duration = time.time() - start_read_time
     assert read_duration < 20.0
 
