@@ -95,18 +95,21 @@ jobs:
       - name: Install npm deps
         working-directory: js_tests
         run: npm ci
+        
       - name: Run js tests
         working-directory: js_tests
         env:
           CI: true
         run: npm test --runInBand
         
-      - name: Setup gcloud
+      - name: Check gcp envs
         run: |
           if [ -z "${{ env.GCP_PROJECT }}" && -z "${{ secrets.GCP_KEY_JSON }}" ]; then
             echo "GCP project not set"
             exit 1
           fi
+        
+      - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ env.GCP_PROJECT }}
