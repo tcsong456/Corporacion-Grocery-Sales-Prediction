@@ -27,7 +27,6 @@ def compute_ordered_hash(df):
 
 
 def test_gcs_read_write(spark):
-    spark.conf.set("spark.sql.adaptive.enabled", "true")
     create_bucket_and_upload_data('integration_test_io', 'integration_test.csv', 'data/test.csv')
     test_id = uuid.uuid4().hex[:8]
     input_path = "gs://integration_test_io/integration_test.csv"
@@ -66,7 +65,7 @@ def test_gcs_read_write(spark):
 
     start_write_time = time.time()
     df_promo_sum \
-        .repartition(8) \
+        .coalesce(1) \
         .write \
         .mode('overwrite') \
         .parquet(output_path)
