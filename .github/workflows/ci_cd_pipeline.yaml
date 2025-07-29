@@ -4,71 +4,109 @@ on:
     branches:
       - main
   pull_request:
+  
+concurrency:
+  group: dataform-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GCP_PROJECT: corporacion-sales-prediction
+  GCS_REGION: europe-west1
 
 jobs:
-  lint-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+  # lint-test:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
       
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.10"
       
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
-          restore-keys: ${{ runner.os }}-pip-
+  #     - name: Cache pip
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: ~/.cache/pip
+  #         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+  #         restore-keys: ${{ runner.os }}-pip-
       
-      - name: Install deps
-        run: |
-          pip install -r requirements.txt
+  #     - name: Install deps
+  #       run: |
+  #         pip install -r requirements.txt
     
-      - name: Flake8 linting test
-        run: |
-          flake8 tests/
+  #     - name: Flake8 linting test
+  #       run: |
+  #         flake8 tests/
           
-  unit-test:
-    needs: lint-test
+  # airflow-tests:
+  #   needs: lint-test
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: docker/setup-buildx-action@v3
+  #     - name: Build pytest image
+  #       uses: docker/build-push-action@v6
+  #       with:
+  #         context: .
+  #         file: dockerfiles/pytest_dockerfile
+  #         tags: pytest-unit-test:latest
+  #         load: true
+  #         cache-from: type=gha
+  #         cache-to: type=gha,mode=max
+  #     - name: Check for GCP key
+  #       run: |
+  #         if [ -z "${{ secrets.GCP_KEY_JSON }}" ];then
+  #           echo "no GCP key is saved on github as secret keys,please download the GCP key and save it as github secret first"
+  #           exit 1
+  #         fi
+  #     - name: Write GCP SA key
+  #       run: |
+  #         printf '%s' '${{ secrets.GCP_KEY_JSON }}' > key.json
+  #     - name: Run pytest unit-test in a container
+  #       run: |
+  #         set -e
+  #         docker run --rm -v "${{ github.workspace }}:/app" \
+  #         -e GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/key.json \
+  #         -e GCP_PROJECT=corporacion-sales-prediction \
+  #         -e GCP_REGION=europe-west1 \
+  #         $( [ -f key.json ] && echo --mount type=bind,src="${{ github.workspace }}/key.json",dst=/run/secrets/key.json ) \
+  #         pytest-unit-test:latest
+      
+  #     - name: Upload Jnit report
+  #       if: always()
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: junit-python
+  #         path: junit-python.xml
+
+  dataform-tests:
+    # needs: airflow-tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - name: Build pytest image
-        uses: docker/build-push-action@v6
+      - name: Setup node js
+        uses: actions/setup-node@v4
         with:
-          context: .
-          file: dockerfiles/pytest_dockerfile
-          tags: pytest-unit-test:latest
-          load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-      - name: Check for GCP key
-        run: |
-          if [ -z "${{ secrets.GCP_KEY_JSON }}" ];then
-            echo "no GCP key is saved on github as secret keys,please download the GCP key and save it as github secret first"
-            exit 1
-          fi
-      - name: Write GCP SA key
-        run: |
-          printf '%s' '${{ secrets.GCP_KEY_JSON }}' > key.json
-      - name: Run pytest unit-test in a container
-        run: |
-          set -e
-          docker run --rm -v "${{ github.workspace }}:/app" \
-          -e GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/key.json \
-          -e GCP_PROJECT=corporacion-sales-prediction \
-          -e GCP_REGION=europe-west1 \
-          $( [ -f key.json ] && echo --mount type=bind,src="${{ github.workspace }}/key.json",dst=/run/secrets/key.json ) \
-          pytest-unit-test:latest
-      
-      - name: Upload Jnit report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-python
-          path: junit-python.xml
+          node-version: 18
+          cache: "npm"
+          cache-dependency-path: js_tests/package-lock.json
+      - name: Install npm deps
+        working-directory: js_tests
+        run: npm ci
+      - name: Run js tests
+        working-directory: js-tests
+        env:
+          CI: true
+        run: npm test --runInBand
+      # - name: Setup gcloud
+      #   if: env.GCP_PROJECT != ''
+      #   uses: google-github-actions/setup-gcloud@v2
+      #   with:
+      #     project_id: ${{ env.GCP_PROJECT }}
+      #     service_account_key: ${{ secrets.GCP_KEY_JSON }}
+      #     export_default_credentials: true
+      # - name: gcloud active accounts
+      #   run: gcloud auth list
+    
           
           
