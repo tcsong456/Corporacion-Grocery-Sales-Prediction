@@ -125,17 +125,17 @@ jobs:
         working-directory: corpor_sales_dataform
         run: |
           cat <<EOF > workflow_settings.yaml
-dataformCoreVersion: ${{ env.DATAFORM_VERSION }}
-defaultProject: ${{ env.GCP_PROJECT }}
-defaultLocation: ${{ env.GCP_REGION }}
-defaultDataset: df_ci_${{ github.run_id }}
-defaultAssertionDataset: df_ci_${{ github.run_id }}_assertions
+          dataformCoreVersion: ${{ env.DATAFORM_VERSION }}
+          defaultProject: ${{ env.GCP_PROJECT }}
+          defaultLocation: ${{ env.GCP_REGION }}
+          defaultDataset: df_ci_${{ github.run_id }}
+          defaultAssertionDataset: df_ci_${{ github.run_id }}_assertions
           EOF
           echo "-----workflow_settings.yaml-----"
           cat workflow_settings.yaml
     
       - name: Install Dataform CLI globally
-        run: npm i -g @dataform/cli@1.26.0
+        run: npm i -g @dataform/cli@${{ env.DATAFORM_VERSION }}
       
       - name: Run dataform test
         working-directory: corpor_sales_dataform
