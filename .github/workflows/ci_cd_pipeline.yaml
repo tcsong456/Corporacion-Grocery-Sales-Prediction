@@ -12,6 +12,7 @@ concurrency:
 env:
   GCP_PROJECT: corporacion-sales-prediction
   GCS_REGION: europe-west1
+  DATAFORM_VERSION: 3.0.24
 
 jobs:
   # lint-test:
@@ -79,17 +80,18 @@ jobs:
   #         name: junit-python
   #         path: junit-python.xml
 
-  dataform-tests:
-    # needs: airflow-tests
+  dataform-npm-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Setup node js
         uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: "npm"
           cache-dependency-path: js_tests/package-lock.json
+          
       - name: Install npm deps
         working-directory: js_tests
         run: npm ci
@@ -98,15 +100,54 @@ jobs:
         env:
           CI: true
         run: npm test --runInBand
-      # - name: Setup gcloud
-      #   if: env.GCP_PROJECT != ''
-      #   uses: google-github-actions/setup-gcloud@v2
-      #   with:
-      #     project_id: ${{ env.GCP_PROJECT }}
-      #     service_account_key: ${{ secrets.GCP_KEY_JSON }}
-      #     export_default_credentials: true
-      # - name: gcloud active accounts
-      #   run: gcloud auth list
+        
+      - name: Setup gcloud
+        run: |
+          if [ -z "${{ env.GCP_PROJECT }}" && -z "${{ secrets.GCP_KEY_JSON }}" ]; then
+            echo "GCP project not set"
+            exit 1
+          fi
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT }}
+          service_account_key: ${{ secrets.GCP_KEY_JSON }}
+          export_default_credentials: true
+          
+      - name: gcloud active accounts
+        run: gcloud auth list
+        
+      - name: Create CI ephemeral datasets
+        run: |
+          bq --location="${{ env.GCP_REGION }}" mk -f -d "${{ env.GCP_PROJECT }}:df_ci_${{ github.run_id }}"
+          bq --location="${{ env.GCP_REGION }}" mk -f -d "${{ env.GCP_PROJECT }}:df_ci_${{ github.run_id }}_assertions"
+      
+      - name: Manaully generate workflow_settings.yaml
+        working-directory: corpor_sales_dataform
+        run: |
+          cat <<EOF > workflow_settings.yaml
+dataformCoreVersion: ${{ env.DATAFORM_VERSION }}
+defaultProject: ${{ env.GCP_PROJECT }}
+defaultLocation: ${{ env.GCP_REGION }}
+defaultDataset: df_ci_${{ github.run_id }}
+defaultAssertionDataset: df_ci_${{ github.run_id }}_assertions
+          EOF
+          echo "-----workflow_settings.yaml-----"
+          cat workflow_settings.yaml
     
+      - name: Install Dataform CLI globally
+        run: npm i -g @dataform/cli@1.26.0
+      
+      - name: Run dataform test
+        working-directory: corpor_sales_dataform
+        run: |
+          dataform test
+          dataform run --full-refresh --tags unit_test
+      
+      - name: Clean up CI datasets
+        if: always()
+        run: |
+          RUN_ID=${{ github.run_id }}
+          bq rm -r -f -d "${{ env.GCP_PROJECT }}:df_ci_${RUN_ID}" ||  echo "Dataset may not exist. Skipping."
+          bq rm -r -f -d "${{ env.GCP_PROJECT }}:df_ci_${RUN_ID}_assertions" || echo "Assertion dataset may not exist. Skipping."
           
           
