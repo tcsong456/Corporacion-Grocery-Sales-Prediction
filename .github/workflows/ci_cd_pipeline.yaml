@@ -14,7 +14,7 @@ env:
   GCP_REGION: europe-west1
   DATAFORM_VERSION: 3.0.24
 
-jobs:
+# jobs:
   # lint-test:
   #   runs-on: ubuntu-latest
   #   steps:
@@ -79,7 +79,7 @@ jobs:
   #       with:
   #         name: junit-python
   #         path: junit-python.xml
-
+jobs:
   dataform-npm-tests:
     runs-on: ubuntu-latest
     steps:
@@ -146,9 +146,9 @@ jobs:
         run: npm i -g @dataform/cli@${{ env.DATAFORM_VERSION }}
       
       - name: Export GOOGLE_APPLICATION_CREDENTIALS
-      run: |
-        printf '%s' "${{ secrets.GCP_KEY_JSON }}" > /tmp/gcp-creds.json
-        echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-creds.json" >> $GITHUB_ENV
+        run: |
+          printf '%s' "${{ secrets.GCP_KEY_JSON }}" > /tmp/gcp-creds.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-creds.json" >> $GITHUB_ENV
 
       - name: Run dataform test
         working-directory: corpor_sales_dataform
