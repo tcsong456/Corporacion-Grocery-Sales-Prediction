@@ -1,3 +1,4 @@
+import os
 import uuid
 import time
 from google.cloud import storage
@@ -5,16 +6,26 @@ from pyspark.sql import functions as F
 from pyspark.sql.types import StructType, StructField, IntegerType, ByteType
 
 
-def create_bucket_and_upload_data(bucket_name, blob_name, data_path):
+def create_bucket_and_upload_data(src_bucket_name, src_blob_name, dst_bucket_name, dst_blob_name):
     client = storage.Client()
-    existing_bucket = client.lookup_bucket(bucket_name)
-    if existing_bucket is not None:
-        return
+    src_bucket = client.lookup_bucket(src_bucket_name)
+    if src_bucket is None:
+        raise FileNotFoundError(f'Bucket: {src_bucket_name} does not exist')
+    else:
+        if src_bucket.blob(src_blob_name).exists(client):
+            src_blob = src_bucket.blob(src_blob_name)
+        else:
+            raise FileNotFoundError(f'blob: {src_blob_name} does not exist')
 
-    client.create_bucket(bucket_name, location='europe-west1', project='corporacion-sales-prediction')
-    bucket = client.bucket(bucket_name)
-    blob = bucket.blob(blob_name)
-    blob.upload_from_filename(data_path)
+    dst_bucket = client.lookup_bucket(dst_bucket_name)
+    if dst_bucket is not None:
+        if dst_bucket.blob(dst_blob_name).exists(client):
+            return
+    else:
+        location = os.environ['GCP_REGION']
+        project = os.environ['GCP_PROJECT']
+        dst_bucket = client.create_bucket(dst_bucket_name, location=location, project=project)
+    src_bucket.copy_blob(src_blob, dst_bucket, dst_blob_name)
 
 
 def compute_ordered_hash(df):
@@ -27,7 +38,7 @@ def compute_ordered_hash(df):
 
 
 def test_gcs_read_write(spark):
-    create_bucket_and_upload_data('integration_test_io', 'integration_test.csv', 'data/test.csv')
+    create_bucket_and_upload_data('corpor-sales-data', 'test.csv', 'integration_test_io', 'integration_test.csv')
     test_id = uuid.uuid4().hex[:8]
     input_path = "gs://integration_test_io/integration_test.csv"
     output_path = f"gs://integration_test_io/test_output_{test_id}.parquet"

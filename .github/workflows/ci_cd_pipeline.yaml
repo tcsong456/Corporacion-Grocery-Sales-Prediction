@@ -54,20 +54,13 @@ jobs:
       - name: Write GCP SA key
         run: |
           printf '%s' '${{ secrets.GCP_KEY_JSON }}' > key.json
-          wc -c key.json
-          python - <<'PY'
-          import json, os
-          key_path = "key.json"
-          print("Validating:", key_path)
-          with open(key_path) as f:
-              json.load(f)
-          print("✅ JSON OK")
-          PY
       - name: Run pytest unit-test in a container
         run: |
           set -e
           docker run --rm -v "${{ github.workspace }}:/app" \
           -e GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/key.json \
+          -e GCP_PROJECT=corporacion-sales-prediction \
+          -e GCP_REGION=europe-west1 \
           $( [ -f key.json ] && echo --mount type=bind,src="${{ github.workspace }}/key.json",dst=/run/secrets/key.json ) \
           pytest-unit-test:latest
       
