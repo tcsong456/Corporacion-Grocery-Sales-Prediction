@@ -148,7 +148,7 @@ jobs:
       - name: Run dataform test
         working-directory: corpor_sales_dataform
         run: |
-          echo "${{ secrets.GCP_KEY_JSON }}" > .df-credentials.json
+          printf '%s' "${{ secrets.GCP_KEY_JSON }}" > .df-credentials.json
           chmod 600 .df-credentials.json
           dataform test
           dataform run --full-refresh --tags unit_test
