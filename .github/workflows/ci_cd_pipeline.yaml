@@ -145,14 +145,19 @@ jobs:
       - name: Install Dataform CLI globally
         run: npm i -g @dataform/cli@${{ env.DATAFORM_VERSION }}
       
+      - name: Export GOOGLE_APPLICATION_CREDENTIALS
+      run: |
+        printf '%s' "${{ secrets.GCP_KEY_JSON }}" > /tmp/gcp-creds.json
+        echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-creds.json" >> $GITHUB_ENV
+
       - name: Run dataform test
         working-directory: corpor_sales_dataform
         run: |
-          printf '%s' "${{ secrets.GCP_KEY_JSON }}" > .df-credentials.json
-          chmod 600 .df-credentials.json
+          # printf '%s' "${{ secrets.GCP_KEY_JSON }}" > .df-credentials.json
+          # chmod 600 .df-credentials.json
           dataform test
           dataform run --full-refresh --tags unit_test
-          rm .df-credentials.json
+          # rm .df-credentials.json
       
       - name: Clean up CI datasets
         if: always()
