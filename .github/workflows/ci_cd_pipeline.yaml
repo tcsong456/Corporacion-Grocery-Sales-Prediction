@@ -94,7 +94,7 @@ jobs:
         working-directory: js_tests
         run: npm ci
       - name: Run js tests
-        working-directory: js-tests
+        working-directory: js_tests
         env:
           CI: true
         run: npm test --runInBand
