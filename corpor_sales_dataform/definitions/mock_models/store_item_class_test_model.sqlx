@@ -1,0 +1,13 @@
+config {
+    type: "table",
+    name: "store_item_class_test_model",
+    tags: ["unit_test"]
+}
+
+SELECT
+ t1.store_nbr,
+ t2.item_nbr,
+ t2.class
+FROM ${ref("mock_store_item_rolling_data")} t1
+JOIN ${ref("mock_raw_item_data")} t2
+ON t1.item_nbr = t2.item_nbr

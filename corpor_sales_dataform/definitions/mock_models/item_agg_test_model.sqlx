@@ -1,0 +1,14 @@
+config {
+    type: "table",
+    name: "item_agg_test_model",
+    tags: ["unit_test"]
+}
+
+SELECT
+  item_nbr,
+  date,
+  SUM(unit_sales) AS sum_unit_sales,
+  SUM(onpromotion) AS sum_onpromotion
+  FROM
+  ${ref("mock_item_data")}
+  GROUP BY item_nbr,date
