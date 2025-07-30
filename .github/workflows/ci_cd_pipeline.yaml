@@ -13,6 +13,7 @@ env:
   GCP_PROJECT: corporacion-sales-prediction
   GCP_REGION: europe-west1
   DATAFORM_VERSION: 3.0.24
+  CI_DATASET_ID: df_ci_${{ github.run_id }}
 
 # jobs:
   # lint-test:
@@ -126,8 +127,8 @@ jobs:
         
       - name: Create CI ephemeral datasets
         run: |
-          bq --location="${{ env.GCP_REGION }}" mk -f -d "${{ env.GCP_PROJECT }}:df_ci_${{ github.run_id }}"
-          bq --location="${{ env.GCP_REGION }}" mk -f -d "${{ env.GCP_PROJECT }}:df_ci_${{ github.run_id }}_assertions"
+          bq --location="${{ env.GCP_REGION }}" mk -f -d "${{ env.GCP_PROJECT }}:df_ci_${{ env.CI_DATASET_ID }}"
+          bq --location="${{ env.GCP_REGION }}" mk -f -d "${{ env.GCP_PROJECT }}:df_ci_${{ env.CI_DATASET_ID }}_assertions"
       
       - name: Install Dataform CLI globally
         run: npm i -g @dataform/cli@${{ env.DATAFORM_VERSION }}
@@ -139,8 +140,8 @@ jobs:
           dataformCoreVersion: ${{ env.DATAFORM_VERSION }}
           defaultProject: ${{ env.GCP_PROJECT }}
           defaultLocation: ${{ env.GCP_REGION }}
-          defaultDataset: df_ci_${{ github.run_id }}
-          defaultAssertionDataset: df_ci_${{ github.run_id }}_assertions
+          defaultDataset: df_ci_${{ env.CI_DATASET_ID }}
+          defaultAssertionDataset: df_ci_${{ env.CI_DATASET_ID }}_assertions
           EOF
           echo "-----workflow_settings.yaml-----"
           cat workflow_settings.yaml
@@ -153,9 +154,10 @@ jobs:
       - name: Create minimal .df-credentials.json
         working-directory: corpor_sales_dataform
         run: |
-          cat > .df-credentials.json << EOF
+          cat > .df-credentials.json <<EOF
           { "projectId": "${{ env.GCP_PROJECT }}", "location": "${{ env.GCP_LOCATION }}" }
           EOF
+          cat .df-credentials.json
 
       - name: Run dataform test
         working-directory: corpor_sales_dataform
