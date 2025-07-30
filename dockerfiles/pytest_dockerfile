@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir \
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 ENV PATH=$JAVA_HOME/bin:$PATH 
 
-WORKDIR app/
+WORKDIR /app
 COPY tests/ tests/
 COPY dockerfiles/pytest_requirements.txt .
 COPY data_preprocess/ data_preprocess/
