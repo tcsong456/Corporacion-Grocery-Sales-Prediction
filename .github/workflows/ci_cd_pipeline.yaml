@@ -151,7 +151,7 @@ jobs:
           echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-creds.json" >> $GITHUB_ENV
     
       - name: Create minimal .df-credentials.json
-        working-directory: copor_sales_dataform
+        working-directory: corpor_sales_dataform
         run: |
           cat > .df-credentials.json << 'EOF'
           { "projectId": "${{ env.GCP_PROJECT }}", "location": "${{ env.GCP_LOCATION }}" }
