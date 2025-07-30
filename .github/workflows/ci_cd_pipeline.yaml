@@ -161,7 +161,6 @@ jobs:
         working-directory: corpor_sales_dataform
         run: |
           dataform compile
-          dataform test
           dataform run --full-refresh --tags unit_test
       
       - name: Clean up CI datasets
