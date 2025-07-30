@@ -153,14 +153,13 @@ jobs:
       - name: Create minimal .df-credentials.json
         working-directory: corpor_sales_dataform
         run: |
-          cat > .df-credentials.json << 'EOF'
+          cat > .df-credentials.json << EOF
           { "projectId": "${{ env.GCP_PROJECT }}", "location": "${{ env.GCP_LOCATION }}" }
           EOF
 
       - name: Run dataform test
         working-directory: corpor_sales_dataform
         run: |
-          ls -la workflow_settings.yaml
           dataform compile
           dataform run --full-refresh --tags unit_test
       
