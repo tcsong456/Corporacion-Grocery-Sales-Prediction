@@ -145,10 +145,17 @@ jobs:
           echo "-----workflow_settings.yaml-----"
           cat workflow_settings.yaml
       
-      - name: Prepare dataform credentials
-        working-directory: corpor_sales_dataform
+      - name: Write SA key for ADC
         run: |
-          printf '%s' '${{ secrets.GCP_KEY_JSON }}' > .df-credentials.json
+          printf '%s' '${{ secrets.GCP_KEY_JSON }}' > /tmp/gcp-creds.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-creds.json" >> $GITHUB_ENV
+    
+      - name: Create minimal .df-credentials.json
+        working-directory: copor_sales_dataform
+        run: |
+          cat > .df-credentials.json << 'EOF'
+          { "projectId": "${{ env.GCP_PROJECT }}", "location": "${{ env.GCP_LOCATION }}" }
+          EOF
 
       - name: Run dataform test
         working-directory: corpor_sales_dataform
