@@ -155,7 +155,7 @@ jobs:
         working-directory: corpor_sales_dataform
         run: |
           cat > .df-credentials.json <<EOF
-          { "projectId": "${{ env.GCP_PROJECT }}", "location": "${{ env.GCP_LOCATION }}" }
+          { "projectId": "${{ env.GCP_PROJECT }}", "location": "${{ env.GCP_REGION }}" }
           EOF
           cat .df-credentials.json
 
