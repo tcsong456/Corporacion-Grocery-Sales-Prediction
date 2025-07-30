@@ -169,4 +169,3 @@ jobs:
           bq rm -r -f -d "${{ env.GCP_PROJECT }}:df_ci_${{ env.CI_DATASET_ID }}" ||  echo "Dataset may not exist. Skipping."
           bq rm -r -f -d "${{ env.GCP_PROJECT }}:df_ci_${{ env.CI_DATASET_ID }}_assertions" || echo "Assertion dataset may not exist. Skipping."
           
-          
