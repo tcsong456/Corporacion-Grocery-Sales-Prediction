@@ -145,10 +145,10 @@ jobs:
           echo "-----workflow_settings.yaml-----"
           cat workflow_settings.yaml
       
-      - name: Export GOOGLE_APPLICATION_CREDENTIALS
+      - name: Prepare dataform credentials
+        working-directory: corpor_sales_dataform
         run: |
-          printf '%s' "${{ secrets.GCP_KEY_JSON }}" > /tmp/gcp-creds.json
-          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-creds.json" >> $GITHUB_ENV
+          printf '%s' '${{ secrets.GCP_KEY_JSON }}' > .df-credentials.json
 
       - name: Run dataform test
         working-directory: corpor_sales_dataform
