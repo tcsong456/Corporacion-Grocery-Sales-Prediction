@@ -166,6 +166,6 @@ jobs:
       - name: Clean up CI datasets
         if: always()
         run: |
-          bq rm -r -f -d "${{ env.GCP_PROJECT }}:${{ env.CI_DATASET_ID }}" ||  echo "Dataset may not exist. Skipping."
+          bq rm -r -f -d "${{ env.GCP_PROJECT }}:${{ env.CI_DATASET_ID }}" || echo "Dataset may not exist. Skipping."
           bq rm -r -f -d "${{ env.GCP_PROJECT }}:${{ env.CI_DATASET_ID }}_assertions" || echo "Assertion dataset may not exist. Skipping."
           
