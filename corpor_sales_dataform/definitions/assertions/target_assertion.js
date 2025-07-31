@@ -1,5 +1,5 @@
 const target_assertion = 
-assert("assert_target_2017614", { tags: ["target_test"] }).query(ctx => `
+assert("assert_target_2017614", { tags: ["unit_test"] }).query(ctx => `
   WITH actual_dataset AS (SELECT * FROM ${ctx.ref("actual_target_data")}),
        expected_dastaset AS (SELECT * FROM ${ctx.ref("expected_target_data")})
   (

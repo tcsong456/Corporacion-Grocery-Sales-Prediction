@@ -1,6 +1,6 @@
 const { generateDates } = require("includes/target_extractor");
 
-publish("actual_target_data", { type: "view", tags: ["target_test"] }).query(ctx => 
+publish("actual_target_data", { type: "view", tags: ["unit_test"] }).query(ctx => 
   generateDates(
     '2017-6-14',
     5,
