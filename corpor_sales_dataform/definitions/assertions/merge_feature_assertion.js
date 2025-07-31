@@ -1,5 +1,5 @@
 const assert_merge_feature_2017614 = 
-assert("assert_merge_feature_2017614", { tags: ["merge_test"] }).query(ctx => `
+assert("assert_merge_feature_2017614", { tags: ["unit_test"] }).query(ctx => `
   WITH actual_dataset AS (SELECT * FROM ${ctx.ref("merge_features_2017614_test_model")}),
        expected_dataset AS (SELECT * FROM ${ctx.ref("expected_merge_results")})
   

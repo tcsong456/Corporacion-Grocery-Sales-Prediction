@@ -1,6 +1,6 @@
 const { merge_datasets } = require("includes/merge");
 
-publish("merge_features_2017614_test_model", { type: "view", tags: ["merge_test"] }).query(ctx =>
+publish("merge_features_2017614_test_model", { type: "view", tags: ["unit_test"] }).query(ctx =>
   merge_datasets(
     [
      'store_item_rolling_stats_mock',
