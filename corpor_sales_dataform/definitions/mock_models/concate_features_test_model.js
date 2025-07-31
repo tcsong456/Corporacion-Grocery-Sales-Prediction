@@ -1,4 +1,4 @@
-publish('expected_concate_models', { type: "view", tags: ["concatenate_test"] }).query(ctx => `
+publish('expected_concate_models', { type: "view", tags: ["unit_test"] }).query(ctx => `
   SELECT * FROM UNNEST([
     STRUCT(1 AS store_nbr, 10 AS item_nbr, 100 AS unit_sales, 1 AS onpromotion, 12 AS mean_sales_past_7, 5 AS promo_sum_past_14),
     STRUCT(2 AS store_nbr, 20 AS item_nbr, 50 AS unit_sales, 1 AS onpromotion, 16.3 AS mean_sales_past_7, 2.91 AS promo_sum_past_14),

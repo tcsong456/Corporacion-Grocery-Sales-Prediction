@@ -1,7 +1,7 @@
 const dates = ['2017-6-14','2017-6-21','2017-6-28'];
 
 const assert_concatenate_row_counts = 
-assert('assert_concatenate_row_counts', { tags: ["concatenate_test"] }).query(ctx => `
+assert('assert_concatenate_row_counts', { tags: ["unit_test"] }).query(ctx => `
   WITH part AS (
   ${dates.map((date,i) => `
     ${i > 0 ? "UNION ALL\n": ''}SELECT COUNT(*) AS c FROM ${ctx.ref(`mock_merge_features_${date.replace(/-/g,'')}`)}
