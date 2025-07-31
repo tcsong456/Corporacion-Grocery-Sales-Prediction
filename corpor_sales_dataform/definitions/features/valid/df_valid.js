@@ -32,7 +32,7 @@ const datasets = ['store_item_rolling_sales_stats',
 const date = '2017-7-26';
 const { merge_datasets } = require("includes/merge");
 
-publish("raw_validation",{type:"view"}).query(ctx => merge_datasets(datasets,date,ctx));
+publish("raw_validation",{type:"view"}).query(ctx => merge_datasets(datasets,date,ctx,"store_item_class"));
 
 publish("df_valid",{type:"view"}).query(ctx => `
                                                     SELECT * FROM(

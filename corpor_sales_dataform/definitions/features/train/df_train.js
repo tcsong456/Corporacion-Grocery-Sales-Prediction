@@ -33,7 +33,7 @@ const { merge_datasets } = require("includes/merge");
 
 dates.forEach(date => {
     const viewName = `merge_features_${date.replace(/-/g,'')}`;
-    publish(viewName,{type:"view"}).query(ctx => merge_datasets(datasets,date,ctx))
+    publish(viewName,{type:"view"}).query(ctx => merge_datasets(datasets,date,ctx,"store_item_class"))
 })
 
 publish("df_train",{type:"view"}).query(ctx => `
