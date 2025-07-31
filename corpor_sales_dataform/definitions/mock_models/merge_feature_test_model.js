@@ -12,7 +12,7 @@ publish("merge_features_2017614_test_model", { type: "view", tags: ["unit_test"]
   )
 );
 
-publish("expected_merge_results", { type: "view", tags: ["merge_test"] }).query(ctx => `
+publish("expected_merge_results", { type: "view", tags: ["unit_test"] }).query(ctx => `
   SELECT * FROM UNNEST([
     STRUCT(1 AS store_nbr, 10 AS item_nbr, 0 AS store_item_unit_sales_min_7, 11 AS store_item_unit_sales_max_7,
            6.5 AS store_item_unit_sales_mean_7, 5.2 AS store_item_unit_sales_median_7, 2.345 AS store_item_unit_sales_std_7,
