@@ -10,10 +10,6 @@ variable "umsa" {
   type        = string
   description = "user managed service account"
 }
-variable "project_nbr" {
-  type        = string
-  description = "project nbr number"
-}
 variable "credential_key_json" {
   type      = string
   sensitive = true
