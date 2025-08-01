@@ -68,7 +68,7 @@ jobs:
           tflint --recursive
       
       - name: tfsec
-        uses: aquasecurity/tfsec-action@v1
+        uses: aquasecurity/tfsec-action@v1.0.3
         with:
           working-directory: terraform
           soft_fail: false
