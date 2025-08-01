@@ -17,5 +17,5 @@ variable "project_nbr" {
 variable "credential_key_json" {
   type      = string
   sensitive = true
-  defaul    = null
+  default   = null
 }
