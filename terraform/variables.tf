@@ -19,3 +19,7 @@ variable "credential_key_json" {
   sensitive = true
   default   = null
 }
+variable "gcp_credential_file" {
+  type    = string
+  default = null
+}
