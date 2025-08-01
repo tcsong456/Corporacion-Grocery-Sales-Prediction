@@ -1,9 +1,11 @@
-name: Corpor-sales-CI
+name: CI Testing
 on:
   push:
     branches:
       - main
   pull_request:
+    paths-ignore:
+      - '**'
   
 concurrency:
   group: dataform-ci-${{ github.ref }}
@@ -73,7 +75,7 @@ jobs:
           $( [ -f key.json ] && echo --mount type=bind,src="${{ github.workspace }}/key.json",dst=/run/secrets/key.json ) \
           pytest-unit-test:latest
      
-      - name: Upload Jnit report
+      - name: Upload JUnit report
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -104,7 +106,7 @@ jobs:
         
       - name: Check gcp envs
         run: |
-          if [ -z "${{ env.GCP_PROJECT }}" && -z "${{ secrets.GCP_KEY_JSON }}" ]; then
+          if [ -z "${{ env.GCP_PROJECT }}" || -z "${{ secrets.GCP_KEY_JSON }}" ]; then
             echo "GCP project not set"
             exit 1
           fi
@@ -131,7 +133,7 @@ jobs:
       - name: Install Dataform CLI globally
         run: npm i -g @dataform/cli@${{ env.DATAFORM_VERSION }}
       
-      - name: Manaully generate workflow_settings.yaml
+      - name: Manually generate workflow_settings.yaml
         working-directory: corpor_sales_dataform
         run: |
           cat <<EOF > workflow_settings.yaml
