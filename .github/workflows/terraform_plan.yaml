@@ -1,5 +1,5 @@
 name: Terraform-Plan
-on
+on:
   push:
     - main
   pull_request:
