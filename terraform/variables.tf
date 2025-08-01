@@ -20,6 +20,6 @@ variable "credential_key_json" {
   default   = null
 }
 variable "gcp_credential_file" {
-  type = string
+  type    = string
   default = null
 }
