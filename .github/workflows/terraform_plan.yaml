@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: changes
-      - uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v3
         with: |
           filters: |
             infra:
