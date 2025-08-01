@@ -1,9 +1,34 @@
+terraform {
+  required_version = ">= 1.9.0"
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 5.10"
+    }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "~> 5.10"
+    }
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.0"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.0"
+    }
+    time = {
+      source  = "hasicorp/time"
+      version = "~> 0.9"
+    }
+  }
+}
+
 locals {
-  project_id  = var.project_id
-  project_nbr = var.project_nbr
-  region      = var.region
-  umsa        = var.umsa
-  umsa_fqn    = "${local.umsa}@${local.project_id}.iam.gserviceaccount.com"
+  project_id = var.project_id
+  region     = var.region
+  umsa       = var.umsa
+  umsa_fqn   = "${local.umsa}@${local.project_id}.iam.gserviceaccount.com"
   composer_roles = [
     "roles/pubsub.admin",
     "roles/eventarc.eventReceiver",
@@ -84,12 +109,13 @@ module "vpc_creation" {
   source       = "terraform-google-modules/network/google"
   project_id   = local.project_id
   network_name = "corpor-sales-vpc"
+  version      = "~> 7.0"
 
   subnets = [
     {
       subnet_name                         = "corpor-sales-subnet"
       subnet_ip                           = "10.0.0.0/16"
-      subnet_region                       = "${local.region}"
+      subnet_region                       = local.region
       subnet_private_access               = true
       subnet_enable_private_google_access = true
     }
@@ -290,10 +316,10 @@ resource "google_composer_environment" "cc3_env_creation" {
     software_config {
       image_version = "composer-3-airflow-2.10.5"
       env_variables = {
-        GCP_PROJECT_ID = "${local.project_id}"
-        GCP_REGION     = "${local.region}"
+        GCP_PROJECT_ID = local.project_id
+        GCP_REGION     = local.region
         SUBNET_NM      = "corpor-sales-subnet"
-        UMSA           = "${local.umsa}"
+        UMSA           = local.umsa
       }
     }
     workloads_config {
@@ -357,8 +383,9 @@ data "archive_file" "function_package" {
 }
 
 resource "google_storage_bucket_object" "upload_function_zip" {
-  name   = "function.zip"
-  source = "../cloud_function/function.zip"
+  name = "function.zip"
+  #  source = "../cloud_function/function.zip"
+  source = data.archive_file.function_package.output_path
   bucket = google_storage_bucket.corpor_cloud_function_creation.name
 }
 
