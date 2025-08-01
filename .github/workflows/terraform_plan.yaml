@@ -12,6 +12,8 @@ env:
 jobs:
   detect-changes:
     runs-on: ubuntu-latest
+    outputs:
+      infra: ${{ steps.changes.outputs.infra }}
     steps:
       - uses: actions/checkout@v4
       - id: changes
@@ -23,7 +25,7 @@ jobs:
   
   tf-plan:
     needs: detect-changes
-    if: needs.detec-changes.outputs.infra == 'true'
+    if: needs.detect-changes.outputs.infra == 'true'
     runs-on: ubuntu-latest
     env:
       TF_IN_AUTOMATION: "true"
