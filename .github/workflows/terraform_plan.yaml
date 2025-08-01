@@ -73,3 +73,7 @@ jobs:
           working_directory: terraform
           soft_fail: false
       
+      - name: Terrafrom plan
+        working-directory: terraform
+        run: terraform plan -no-color -out=tfplan.bin
+      
