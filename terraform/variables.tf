@@ -14,3 +14,8 @@ variable "project_nbr" {
   type        = string
   description = "project nbr number"
 }
+variable "credential_key_json" {
+  type      = string
+  sensitive = true
+  defaul    = null
+}

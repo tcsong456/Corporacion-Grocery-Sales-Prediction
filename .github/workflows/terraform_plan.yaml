@@ -29,6 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TF_IN_AUTOMATION: "true"
+      TF_VAR_credential_key_json: ${{ secrets.GCP_KEY_JSON }}
     steps:
       - uses: actions/checkout@v4
       - name: Authentication to google cloud
