@@ -482,4 +482,3 @@ resource "google_bigquery_dataset" "bq_dataset_creation" {
     create_before_destroy = true
   }
 }
- 
