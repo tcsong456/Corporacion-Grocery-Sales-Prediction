@@ -63,7 +63,7 @@ jobs:
         with:
           workflow: Terraform-Plan
           run_id: ${{ github.event.workflow_run.id || ''}}
-          name: tfplan-${{ github.sha }}
+          name: tfplan-${{ steps.commit_sha.outputs.sha }}
           path: terraform
       
       - name: Verify plan file presence
