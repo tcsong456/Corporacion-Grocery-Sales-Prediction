@@ -6,8 +6,8 @@ locals {
 }
 
 provider "google-beta" {
-  project = var.project_id
-  region  = var.region
+  project     = var.project_id
+  region      = var.region
   credentials = local.creds
 }
 

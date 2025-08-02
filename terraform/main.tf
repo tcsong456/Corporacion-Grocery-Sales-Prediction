@@ -383,7 +383,7 @@ data "archive_file" "function_package" {
 }
 
 resource "google_storage_bucket_object" "upload_function_zip" {
-  name = "function.zip"
+  name   = "function.zip"
   source = data.archive_file.function_package.output_path
   bucket = google_storage_bucket.corpor_cloud_function_creation.name
 }
