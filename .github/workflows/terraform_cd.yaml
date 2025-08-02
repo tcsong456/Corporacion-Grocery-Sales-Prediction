@@ -1,0 +1,84 @@
+name: Terraform-apply
+on:
+  workflow_run:
+    workflows: ["Terraform-Plan"]
+    type: ["completed"]
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "commit sha to apply"
+        required: False
+        type: string
+  
+concurrency:
+  group: tf-apply-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GCP_PROJECT: corporacion-sales-prediction
+  GCP_REGION: europe-west1
+  TF_VERSION: 1.9.0
+  GCP_UMSA: corpor-sales-sa
+
+jobs:
+  terraform-apply:
+    if: >
+      github.event_name == "workflow_dispatch" ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get target commit sha
+        id: commit_sha
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.sha }}" ];then
+            echo "sha=${{ github.event.inputs.sha }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "workflow_run" ];then
+            echo "sha=${{ github.event.workflow_run.sha }}" >> $GTIHUB_OUTPUT
+          else "sha=${{ github.sha }}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.commit_sha.outputs.sha }}
+      
+      - name: Authenticate to google gcloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_KEY_JSON }}
+      
+      - name: Setup google gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT }}
+      
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      
+      - name: Download tf-plan artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: Terraform-Plan
+          run_id: ${{ github.event.workflow_run.id || ''}}
+          name: tfplan-${{ github.sha }}
+          path: terraform
+      
+      - name: Verify plan file presence
+        run: |
+          test -f terraform/tfplan.bin || { echo 'tfplan.bin file does not exist in terraform/ folder'; exit 1; }
+      
+      - name: Terraform init to obtain the backend
+        working-directory: terraform
+        run: terraform init -input=false
+      
+      - name: Terraform apply
+        working-directory: terraform
+        env:
+          TF_VAR_project_id: ${{ env.GCP_PROJECT }}
+          TF_VAR_region: ${{ env.GCP_REGION }}
+          TF_VAR_UMSA: ${{ env.GCP_UMSA }}
+        run: terraform apply -input=false tfplan.bin
+      
+      
