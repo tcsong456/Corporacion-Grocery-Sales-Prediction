@@ -7,7 +7,8 @@ on:
 
 env:
   GCP_PROJECT: corporacion-sales-prediction
-  GCP_region: europe-west1
+  GCP_REGION: europe-west1
+  GCP_UMSA: "corpor-sales-sa"
 
 jobs:
   detect-changes:
@@ -75,5 +76,9 @@ jobs:
       
       - name: Terrafrom plan
         working-directory: terraform
+        env:
+          TF_VAR_project_id: ${{ env.GCP_PROJECT }}
+          TF_VAR_region: ${{ env.GCP_REGION }}
+          TF_VAR_umsa: ${{ env.GCP_UMSA }}
         run: terraform plan -no-color -out=tfplan.bin
       
