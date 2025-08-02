@@ -8,7 +8,6 @@ locals {
 provider "google-beta" {
   project = var.project_id
   region  = var.region
-  #  credentials = file("${path.module}/../key.json")
   credentials = local.creds
 }
 
