@@ -11,8 +11,8 @@ on:
         type: string
   
 concurrency:
-  group: tf-apply-${{ github.ref }}
-  cancel-in-progress: true
+  group: tf-apply-${{ github.repository }}
+  cancel-in-progress: false
 
 env:
   GCP_PROJECT: corporacion-sales-prediction
