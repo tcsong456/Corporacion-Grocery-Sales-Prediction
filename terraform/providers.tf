@@ -1,6 +1,8 @@
 locals {
-  creds = try(var.credential_key_json != null && trim(var.credential_key_json) != "" ? var.credential_key_json :
-  var.gcp_credential_file != null && trim(var.gcp_credential_file) != "" ? file(var.gcp_credential_file) : null)
+  creds = (
+    length(trimspace(var.credential_key_json)) > 0 ? var.credential_key_json :
+    length(trimspace(var.gcp_credential_file)) > 0 ? try(file(var.gcp_credential_file), null) : null
+  )
 }
 
 provider "google-beta" {
