@@ -5,6 +5,10 @@ on:
       - main
   pull_request:
 
+concurrency:
+  group: tf-apply-${{ github.repository }}
+  cancel-in-progress: false
+
 env:
   GCP_PROJECT: corporacion-sales-prediction
   GCP_REGION: europe-west1
