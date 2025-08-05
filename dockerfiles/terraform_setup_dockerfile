@@ -24,6 +24,9 @@ RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/sh
     && apt-get update && apt-get install -y terraform \
     && rm -rf /var/lib/apt/lists/*
 
+ENV GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/key.json
+ENV CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE=/run/secrets/key.json 
+
 WORKDIR /app
 COPY kaggle.json /root/.kaggle/kaggle.json
 COPY shell_scripts/data_download.sh .
@@ -31,11 +34,14 @@ COPY shell_scripts/run_terraform.sh .
 COPY terraform/ ./terraform/
 COPY data_preprocess/ ./data_preprocess/
 COPY cloud_function/ ./cloud_function/
-COPY key.json .
+#COPY key.json .
 
-RUN gcloud auth activate-service-account --key-file=key.json && \
-    PROJECT_ID=$(jq -r '.project_id' key.json) && \
-    gcloud config set project "$PROJECT_ID"
+#RUN gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS && \
+#    PROJECT_ID=$(jq -r '.project_id' key.json) && \
+#    gcloud config set project "$PROJECT_ID" \
+#    gcloud storage buckets add-iam-policy-bindings gs://terraform_state \
+#      --member="serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com" \
+#      --role="roles/storage.objectAdmin"
 
 RUN dos2unix data_download.sh run_terraform.sh && \
     chmod 600 /root/.kaggle/kaggle.json && \

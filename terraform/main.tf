@@ -254,12 +254,29 @@ resource "time_sleep" "sleep_after_buckets_creation" {
   google_storage_bucket.corpor_scripts_bucket_creation]
 }
 
+data "google_project" "current" {
+  project_id = local.project_id
+}
+
+resource "google_storage_bucket_iam_member" "dataproc_sa_obj_viewer" {
+  bucket = "corpor-sales-data"
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:service-${data.google_project.current.number}@dataproc-accounts.iam.gserviceaccount.com"
+  depends_on = [time_sleep.wait_for_composer_apis,
+  time_sleep.sleep_after_buckets_creation]
+}
+
 resource "google_storage_bucket_object" "corpor_datasets_upload_to_gcs" {
   for_each   = fileset("../data/", "*")
   source     = "../data/${each.value}"
   name       = each.value
   bucket     = google_storage_bucket.corpor_data_bucket_creation.name
   depends_on = [time_sleep.sleep_after_buckets_creation]
+}
+
+resource "time_sleep" "wait_for_data_upload" {
+  create_duration = "30s"
+  depends_on      = [google_storage_bucket_object.corpor_datasets_upload_to_gcs]
 }
 
 resource "null_resource" "download_and_upload_gcs_connector" {
@@ -388,10 +405,6 @@ resource "google_storage_bucket_object" "upload_function_zip" {
   bucket = google_storage_bucket.corpor_cloud_function_creation.name
 }
 
-data "google_project" "current" {
-  project_id = local.project_id
-}
-
 resource "google_pubsub_topic" "dags_upload" {
   name = "cc3-bucket-events"
 }
@@ -407,7 +420,7 @@ resource "google_pubsub_topic_iam_binding" "gcs_publisher" {
 resource "google_storage_notification" "on_dags_upload" {
   bucket             = split("/", substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix, 5, -1))[0]
   topic              = google_pubsub_topic.dags_upload.id
-  event_types        = ["OBJECT_FINALIZE"]
+  event_types        = ["OBJECT_FINALIZE", "OBJECT_METADATA_UPDATE"]
   object_name_prefix = "dags/"
   payload_format     = "JSON_API_V1"
 }
@@ -466,12 +479,14 @@ resource "time_sleep" "wait_for_cloud_function" {
 }
 
 resource "google_storage_bucket_object" "upload_dag_to_cc3" {
-  name   = "dags/data_airflow.py"
-  source = "../data_preprocess/data_airflow.py"
-  bucket = split("/", substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix, 5, -1))[0]
+  name     = "dags/data_airflow.py"
+  source   = "../data_preprocess/data_airflow.py"
+  bucket   = split("/", substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix, 5, -1))[0]
+  metadata = { ci_build = var.build_id }
   depends_on = [time_sleep.sleep_after_composer_creation,
     time_sleep.wait_for_notification,
-  time_sleep.wait_for_cloud_function]
+    time_sleep.wait_for_cloud_function,
+  time_sleep.wait_for_data_upload]
 }
 
 resource "google_bigquery_dataset" "bq_dataset_creation" {

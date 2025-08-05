@@ -1,20 +1,36 @@
-PROJECT_ID=$(gcloud config list --format "value(core.project)")
-PROJECT_NBR=$(gcloud projects describe $PROJECT_ID | grep projectNumber | \
-              cut -d':' -f2 | tr -d "'" | xargs)
+gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+PROJECT_ID=$(jq -r '.project_id' $GOOGLE_APPLICATION_CREDENTIALS)
+#PROJECT_ID=$(gcloud config list --format "value(core.project)")
+gcloud config set project "$PROJECT_ID"
+
 GCP_REGION="europe-west1"
 UMSA="corpor-sales-sa"
+backend_bucket="tfstate-${PROJECT_ID}"
+
+if ! gsutil -b gs://${backend_bucket} &>/dev/null; then
+  echo "creating bucket ${backend_bucket}"
+  gsutil mb -p ${PROJECT_ID} -l ${GCP_REGION} gs://${backend_bucket}
+else
+  echo "gs://${backend_bucket} already exists"
+fi
+gsutil versioning set on gs://${backend_bucket}
+gcloud storage buckets add-iam-policy-binding gs://$backend_bucket \
+  --member="serviceAccount:$UMSA@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/storage.objectAdmin"
 
 cd $(pwd)/terraform 
 sed -i 's/\r$//' main.tf
-terraform init
+terraform init -input=false
 
 terraform plan \
   -var="project_id=${PROJECT_ID}" \
   -var="umsa=${UMSA}" \
-  -var="region=${GCP_REGION}" 
+  -var="region=${GCP_REGION}" \
+  -var="build_id=local-run-000" 
 
 terraform apply \
   -var="project_id=${PROJECT_ID}" \
   -var="umsa=${UMSA}" \
-  -var="region=${GCP_REGION}"
+  -var="region=${GCP_REGION}" \
+  -var="build_id=local-run-000" \
   --auto-approve >> provisioning.output

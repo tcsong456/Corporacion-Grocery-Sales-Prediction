@@ -80,6 +80,6 @@ jobs:
           TF_VAR_project_id: ${{ env.GCP_PROJECT }}
           TF_VAR_region: ${{ env.GCP_REGION }}
           TF_VAR_UMSA: ${{ env.GCP_UMSA }}
-        run: terraform apply -input=false tfplan.bin
+        run: terraform apply -input=false --auto-approve tfplan.bin
       
       

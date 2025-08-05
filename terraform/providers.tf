@@ -1,8 +1,6 @@
 locals {
-  creds = coalesce(
-    var.credential_key_json,
-    var.gcp_credential_file != null ? file(var.gcp_credential_file) : null
-  )
+  creds = try(var.credential_key_json != null && trim(var.credential_key_json) != "" ? var.credential_key_json :
+  var.gcp_credential_file != null && trim(var.gcp_credential_file) != "" ? file(var.gcp_credential_file) : null)
 }
 
 provider "google-beta" {
