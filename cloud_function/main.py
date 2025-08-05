@@ -32,7 +32,7 @@ def wait_until_dag_ready(airflow_uri,dag_id,headers,timeout=120,interval=10):
                     print(f"{dag_id} is now available")
                     return
             else:
-                print(f"warning:retuned api code:{resp.statsu_code}")
+                print(f"warning:retuned api code:{resp.status_code}")
         except Exception as e:
             print(f"Error polling dag list: {e}")
         time.sleep(interval)
@@ -49,7 +49,7 @@ def trigger_dag_run(dag_id, run_id, conf=None):
         "Content-Type": "application/json"
     }
     
-    wait_until_dag_ready(airflow_uri,dag_id,headers)
+    wait_until_dag_ready(airflow_uri,dag_id,headers,timeout=240)
     
     url = f"{airflow_uri}/api/v1/dags/{dag_id}/dagRuns"
     payload = {
