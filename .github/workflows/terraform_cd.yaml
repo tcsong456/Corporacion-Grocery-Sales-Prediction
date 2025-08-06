@@ -67,8 +67,8 @@ jobs:
       - name: Download tf-plan artifact
         uses: dawidd6/action-download-artifact@v6
         with:
-          workflow: Terraform-Plan
-          run_id: ${{ github.event.workflow_run.id || ''}}
+          # workflow: Terraform-Plan //trigger from workflow
+          # run_id: ${{ github.event.workflow_run.id || ''}}
           name: tfplan-${{ steps.commit_sha.outputs.sha }}
           path: terraform
       

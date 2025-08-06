@@ -85,7 +85,7 @@ jobs:
         run: terraform plan -no-color -out=tfplan.bin
       
       - name: Save commit SHA
-        run: echo "${{ github.event.pull_request.head.sha || github.sha }}" > terraform/sha.txt
+        run: echo "${{ github.event.pull_request.head.sha || github.sha }}"
       
       - name: Upload plan artifact
         uses: actions/upload-artifact@v4
