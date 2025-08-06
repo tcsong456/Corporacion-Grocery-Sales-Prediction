@@ -84,7 +84,7 @@ jobs:
           TF_VAR_build_id: ${{ github.run_id }}-${{ github.sha }}
         run: terraform plan -no-color -out=tfplan.bin
       
-      - name: Save commit SHA
+      - name: Print commit SHA
         run: echo "${{ github.event.pull_request.head.sha || github.sha }}"
       
       - name: Upload plan artifact
