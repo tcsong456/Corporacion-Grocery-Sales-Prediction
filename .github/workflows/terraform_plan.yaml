@@ -1,13 +1,10 @@
 name: Terraform-Plan
 on:
-  push:
-    branches:
-      - main
   pull_request:
 
 concurrency:
   group: tf-apply-${{ github.repository }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   GCP_PROJECT: corporacion-sales-prediction
@@ -87,9 +84,14 @@ jobs:
           TF_VAR_build_id: ${{ github.run_id }}-${{ github.sha }}
         run: terraform plan -no-color -out=tfplan.bin
       
+      - name: Save commit SHA
+        run: echo "${{ github.event.pull_request.head.sha || github.sha }}" > sha.txt
+      
       - name: Upload plan artifact
         uses: actions/upload-artifact@v4
         with:
           name: tfplan-${{ github.event.pull_request.head.sha || github.sha }}
-          path: terraform/tfplan.bin    
+          path: |
+            terraform/tfplan.bin
+            sha.txt  
       

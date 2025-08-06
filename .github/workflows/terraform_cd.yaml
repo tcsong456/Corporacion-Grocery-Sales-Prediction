@@ -1,13 +1,13 @@
 name: Terraform-apply
 on:
-  workflow_run:
-    workflows: ["Terraform-Plan"]
-    type: ["completed"]
+  # workflow_run:
+  #   workflows: ["Terraform-Plan"]
+  #   type: ["completed"]
   workflow_dispatch:
     inputs:
       sha:
         description: "commit sha to apply"
-        required: False
+        required: true
         type: string
 
 permissions:
@@ -16,7 +16,7 @@ permissions:
 
 concurrency:
   group: tf-apply-${{ github.repository }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   GCP_PROJECT: corporacion-sales-prediction
@@ -27,9 +27,11 @@ env:
 jobs:
   terraform-apply:
     if: >
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+      github.event_name == 'workflow_dispatch'
+      # github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    environment:
+      name: production
     steps:
       - name: Get target commit sha
         id: commit_sha
