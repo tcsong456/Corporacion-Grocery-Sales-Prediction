@@ -9,6 +9,9 @@ on:
         description: "commit sha to apply"
         required: true
         type: string
+      run_id:
+        description: "workflow run_id from CI"
+        required: true
 
 permissions:
   actions: read
@@ -35,6 +38,7 @@ jobs:
         id: commit_sha
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.sha }}" ];then
+            echo "${{ github.event.inputs.sha }}"
             echo "sha=${{ github.event.inputs.sha }}" >> $GITHUB_OUTPUT
           elif [ "${{ github.event_name }}" = "workflow_run" ];then
             echo "sha=${{ github.event.workflow_run.head_sha }}" >> $GITHUB_OUTPUT
@@ -65,8 +69,8 @@ jobs:
       - name: Download tf-plan artifact
         uses: dawidd6/action-download-artifact@v6
         with:
-          # workflow: Terraform-Plan //trigger from workflow
-          run_id: ${{ github.event.workflow_run.id || ''}}
+          workflow: Terraform-Plan
+          run_id: ${{ github.event.workflow_run.id }}
           name: tfplan-${{ steps.commit_sha.outputs.sha }}
           path: terraform
       
