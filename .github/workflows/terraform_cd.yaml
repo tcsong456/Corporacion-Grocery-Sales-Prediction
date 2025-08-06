@@ -9,7 +9,11 @@ on:
         description: "commit sha to apply"
         required: False
         type: string
-  
+
+permissions:
+  actions: read
+  contents: read
+
 concurrency:
   group: tf-apply-${{ github.repository }}
   cancel-in-progress: false
@@ -64,7 +68,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v6
         with:
           workflow: Terraform-Plan
-          # run_id: ${{ github.event.workflow_run.id || ''}}
+          run_id: ${{ github.event.workflow_run.id || ''}}
           name: tfplan-${{ steps.commit_sha.outputs.sha }}
           path: terraform
       
