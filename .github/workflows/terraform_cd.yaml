@@ -70,7 +70,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v6
         with:
           workflow: Terraform-Plan
-          run_id: ${{ github.event.workflow_run.id }}
+          run_id: ${{ github.event.inputs.run_id }}
           name: tfplan-${{ steps.commit_sha.outputs.sha }}
           path: terraform
       
