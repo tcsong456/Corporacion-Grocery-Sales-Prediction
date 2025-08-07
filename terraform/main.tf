@@ -67,7 +67,8 @@ locals {
     "artifactregistry.googleapis.com",
     "run.googleapis.com",
     "serviceusage.googleapis.com",
-    "logging.googleapis.com"
+    "logging.googleapis.com",
+    "cloudbilling.googleapis.com"
   ]
 }
 
@@ -211,7 +212,7 @@ resource "time_sleep" "wait_for_network_and_firewall_creation" {
   ]
 }
 
-resource "google_storage_bucket" "corpor_data_bucket_creation" {
+resource "google_storage_bucket" "corporacion_data_bucket_creation" {
   project                     = local.project_id
   name                        = "corpor-sales-data"
   location                    = local.region
@@ -220,7 +221,7 @@ resource "google_storage_bucket" "corpor_data_bucket_creation" {
   depends_on                  = [time_sleep.wait_for_network_and_firewall_creation]
 }
 
-resource "google_storage_bucket" "corpor_lib_bucket_creation" {
+resource "google_storage_bucket" "corporacion_lib_bucket_creation" {
   project                     = local.project_id
   name                        = "corpor-sales-lib"
   location                    = local.region
@@ -229,7 +230,7 @@ resource "google_storage_bucket" "corpor_lib_bucket_creation" {
   depends_on                  = [time_sleep.wait_for_network_and_firewall_creation]
 }
 
-resource "google_storage_bucket" "corpor_scripts_bucket_creation" {
+resource "google_storage_bucket" "corporacion_scripts_bucket_creation" {
   project                     = local.project_id
   name                        = "corpor-sales-scripts"
   location                    = local.region
@@ -238,9 +239,9 @@ resource "google_storage_bucket" "corpor_scripts_bucket_creation" {
   depends_on                  = [time_sleep.wait_for_network_and_firewall_creation]
 }
 
-resource "google_storage_bucket" "corpor_cloud_function_creation" {
+resource "google_storage_bucket" "corporacion_cloud_function_creation" {
   project                     = local.project_id
-  name                        = "${local.project_id}-cf-bucket"
+  name                        = "${local.project_id}-cloudfunction-bucket"
   location                    = local.region
   uniform_bucket_level_access = true
   force_destroy               = true
@@ -249,28 +250,16 @@ resource "google_storage_bucket" "corpor_cloud_function_creation" {
 
 resource "time_sleep" "sleep_after_buckets_creation" {
   create_duration = "60s"
-  depends_on = [google_storage_bucket.corpor_data_bucket_creation,
-    google_storage_bucket.corpor_lib_bucket_creation,
-  google_storage_bucket.corpor_scripts_bucket_creation]
-}
-
-data "google_project" "current" {
-  project_id = local.project_id
-}
-
-resource "google_storage_bucket_iam_member" "dataproc_sa_obj_viewer" {
-  bucket = "corpor-sales-data"
-  role   = "roles/storage.objectViewer"
-  member = "serviceAccount:service-${data.google_project.current.number}@dataproc-accounts.iam.gserviceaccount.com"
-  depends_on = [time_sleep.wait_for_composer_apis,
-  time_sleep.sleep_after_buckets_creation]
+  depends_on = [google_storage_bucket.corporacion_data_bucket_creation,
+    google_storage_bucket.corporacion_lib_bucket_creation,
+  google_storage_bucket.corporacion_scripts_bucket_creation]
 }
 
 resource "google_storage_bucket_object" "corpor_datasets_upload_to_gcs" {
   for_each   = fileset("../data/", "*")
   source     = "../data/${each.value}"
   name       = each.value
-  bucket     = google_storage_bucket.corpor_data_bucket_creation.name
+  bucket     = google_storage_bucket.corporacion_data_bucket_creation.name
   depends_on = [time_sleep.sleep_after_buckets_creation]
 }
 
@@ -283,7 +272,7 @@ resource "null_resource" "download_and_upload_gcs_connector" {
   provisioner "local-exec" {
     command     = <<EOT
       wget -O gcs-connector-hadoop3-latest.jar "https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop3-latest.jar" &&
-      gsutil cp gcs-connector-hadoop3-latest.jar "gs://${google_storage_bucket.corpor_lib_bucket_creation.name}/libs/"
+      gsutil cp gcs-connector-hadoop3-latest.jar "gs://${google_storage_bucket.corporacion_lib_bucket_creation.name}/libs/"
     EOT
     interpreter = ["bash", "-c"]
   }
@@ -293,35 +282,35 @@ resource "null_resource" "download_and_upload_gcs_connector" {
 resource "google_storage_bucket_object" "train_data_process_script_upload" {
   name       = "preprocess/train_data_process.py"
   source     = "../data_preprocess/train_data_process.py"
-  bucket     = google_storage_bucket.corpor_scripts_bucket_creation.name
+  bucket     = google_storage_bucket.corporacion_scripts_bucket_creation.name
   depends_on = [time_sleep.sleep_after_buckets_creation]
 }
 
 resource "google_storage_bucket_object" "train_test_concat_script_upload" {
   name       = "preprocess/train_test_concat.py"
   source     = "../data_preprocess/train_test_concat.py"
-  bucket     = google_storage_bucket.corpor_scripts_bucket_creation.name
+  bucket     = google_storage_bucket.corporacion_scripts_bucket_creation.name
   depends_on = [time_sleep.sleep_after_buckets_creation]
 }
 
 resource "google_storage_bucket_object" "unit_sales_nan_fill_script_upload" {
   name       = "preprocess/unit_sales_nan_fill.py"
   source     = "../data_preprocess/unit_sales_nan_fill.py"
-  bucket     = google_storage_bucket.corpor_scripts_bucket_creation.name
+  bucket     = google_storage_bucket.corporacion_scripts_bucket_creation.name
   depends_on = [time_sleep.sleep_after_buckets_creation]
 }
 
 resource "google_storage_bucket_object" "promo_nan_fill_script_upload" {
   name       = "preprocess/promo_nan_fill.py"
   source     = "../data_preprocess/promo_nan_fill.py"
-  bucket     = google_storage_bucket.corpor_scripts_bucket_creation.name
+  bucket     = google_storage_bucket.corporacion_scripts_bucket_creation.name
   depends_on = [time_sleep.sleep_after_buckets_creation]
 }
 
 resource "google_storage_bucket_object" "final_process_script_upload" {
   name       = "preprocess/final_process.py"
   source     = "../data_preprocess/final_process.py"
-  bucket     = google_storage_bucket.corpor_scripts_bucket_creation.name
+  bucket     = google_storage_bucket.corporacion_scripts_bucket_creation.name
   depends_on = [time_sleep.sleep_after_buckets_creation]
 }
 
@@ -402,11 +391,21 @@ data "archive_file" "function_package" {
 resource "google_storage_bucket_object" "upload_function_zip" {
   name   = "function.zip"
   source = data.archive_file.function_package.output_path
-  bucket = google_storage_bucket.corpor_cloud_function_creation.name
+  bucket = google_storage_bucket.corporacion_cloud_function_creation.name
 }
 
 resource "google_pubsub_topic" "dags_upload" {
   name = "cc3-bucket-events"
+  depends_on = [time_sleep.wait_for_composer_apis]
+}
+
+data "google_project" "current" {
+  project_id = local.project_id
+}
+
+data "google_storage_project_service_account" "gcs" {
+  project = var.project_id
+  depends_on = [time_sleep.wait_for_composer_apis]
 }
 
 resource "google_pubsub_topic_iam_binding" "gcs_publisher" {
@@ -440,7 +439,7 @@ resource "google_cloudfunctions2_function" "trigger_dag" {
     entry_point = "handler"
     source {
       storage_source {
-        bucket = google_storage_bucket.corpor_cloud_function_creation.name
+        bucket = google_storage_bucket.corporacion_cloud_function_creation.name
         object = google_storage_bucket_object.upload_function_zip.name
       }
     }
@@ -497,4 +496,3 @@ resource "google_bigquery_dataset" "bq_dataset_creation" {
     create_before_destroy = true
   }
 }
- 

@@ -34,14 +34,6 @@ COPY shell_scripts/run_terraform.sh .
 COPY terraform/ ./terraform/
 COPY data_preprocess/ ./data_preprocess/
 COPY cloud_function/ ./cloud_function/
-#COPY key.json .
-
-#RUN gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS && \
-#    PROJECT_ID=$(jq -r '.project_id' key.json) && \
-#    gcloud config set project "$PROJECT_ID" \
-#    gcloud storage buckets add-iam-policy-bindings gs://terraform_state \
-#      --member="serviceAccount:corpor-sales-sa@corporacion-sales-prediction.iam.gserviceaccount.com" \
-#      --role="roles/storage.objectAdmin"
 
 RUN dos2unix data_download.sh run_terraform.sh && \
     chmod 600 /root/.kaggle/kaggle.json && \

@@ -1,5 +1,5 @@
 dataformCoreVersion: 3.0.24
-defaultProject: corporacion-sales-prediction
+defaultProject: corporacion-sales-forecasting
 defaultLocation: europe-west1
 defaultDataset: corpor_sales_prediction_dataset
 defaultAssertionDataset: dataform_assertions

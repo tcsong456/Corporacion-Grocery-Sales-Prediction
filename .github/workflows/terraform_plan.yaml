@@ -33,7 +33,9 @@ jobs:
       TF_IN_AUTOMATION: "true"
       TF_VAR_credential_key_json: ${{ secrets.GCP_KEY_JSON }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout the current repo
+        uses: actions/checkout@v4
+        
       - name: Authentication to google cloud
         uses: google-github-actions/auth@v2
         with:
