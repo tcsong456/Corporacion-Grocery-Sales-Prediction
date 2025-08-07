@@ -7,7 +7,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  GCP_PROJECT: corporacion-sales-prediction
+  GCP_PROJECT: corporacion-sales-forecasting
   GCP_REGION: europe-west1
   GCP_UMSA: "corpor-sales-sa"
 
