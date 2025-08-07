@@ -395,7 +395,7 @@ resource "google_storage_bucket_object" "upload_function_zip" {
 }
 
 resource "google_pubsub_topic" "dags_upload" {
-  name = "cc3-bucket-events"
+  name       = "cc3-bucket-events"
   depends_on = [time_sleep.wait_for_composer_apis]
 }
 
@@ -404,7 +404,7 @@ data "google_project" "current" {
 }
 
 data "google_storage_project_service_account" "gcs" {
-  project = var.project_id
+  project    = var.project_id
   depends_on = [time_sleep.wait_for_composer_apis]
 }
 
