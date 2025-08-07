@@ -398,10 +398,11 @@ resource "google_pubsub_topic" "dags_upload" {
   name       = "cc3-bucket-events"
   depends_on = [time_sleep.wait_for_composer_apis]
 }
-
+/*
 data "google_project" "current" {
   project_id = local.project_id
 }
+*/
 
 data "google_storage_project_service_account" "gcs" {
   project    = var.project_id
@@ -411,7 +412,7 @@ data "google_storage_project_service_account" "gcs" {
 resource "google_pubsub_topic_iam_binding" "gcs_publisher" {
   topic   = google_pubsub_topic.dags_upload.name
   role    = "roles/pubsub.publisher"
-  members = ["serviceAccount:service-${data.google_project.current.number}@gs-project-accounts.iam.gserviceaccount.com"]
+  members = ["serviceAccount:service-${data.google_storage_project_service_account.gcs.email_address}@gs-project-accounts.iam.gserviceaccount.com"]
   depends_on = [time_sleep.wait_for_roles,
   google_pubsub_topic.dags_upload]
 }
