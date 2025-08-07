@@ -1,7 +1,7 @@
 locals {
   creds = (
-    length(trimspace(var.credential_key_json)) > 0 ? var.credential_key_json :
-    length(trimspace(var.gcp_credential_file)) > 0 ? try(file(var.gcp_credential_file), null) : null
+    length(trimspace(try(coalesce(var.credential_key_json,""),""))) > 0 ? var.credential_key_json :
+    length(trimspace(try(coalesce(var.gcp_credential_file,""),""))) > 0 ? try(file(var.gcp_credential_file), null) : null
   )
 }
 
