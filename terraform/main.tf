@@ -372,13 +372,13 @@ resource "time_sleep" "sleep_after_composer_creation" {
 }
 
 provider "archive" {}
-
+/*
 data "archive_file" "function_package" {
   type        = "zip"
-  output_path = "${path.module}/cloud_function/function.zip"
+  output_path = "../cloud_function/function.zip"
 
   source {
-    content  = file("${path.module}/cloud_function/main.py")
+    content  = file("../cloud_function/main.py")
     filename = "main.py"
   }
 
@@ -386,6 +386,13 @@ data "archive_file" "function_package" {
     content  = file("../cloud_function/requirements.txt")
     filename = "requirements.txt"
   }
+}
+*/
+
+data "archive_file" "function_package" {
+  type        = "zip"
+  source_dir  = "${path.root}/cloud_function"
+  output_path = "${path.module}/function.zip"
 }
 
 locals {
