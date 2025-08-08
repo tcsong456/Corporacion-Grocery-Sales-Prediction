@@ -372,13 +372,13 @@ resource "time_sleep" "sleep_after_composer_creation" {
 }
 
 provider "archive" {}
-
+/*
 data "archive_file" "function_package" {
   type        = "zip"
-  output_path = "${path.module}/cloud_function/function.zip"
+  output_path = "../cloud_function/function.zip"
 
   source {
-    content  = file("${path.module}/cloud_function/main.py")
+    content  = file("../cloud_function/main.py")
     filename = "main.py"
   }
 
@@ -386,6 +386,13 @@ data "archive_file" "function_package" {
     content  = file("../cloud_function/requirements.txt")
     filename = "requirements.txt"
   }
+}
+*/
+
+data "archive_file" "function_package" {
+  type        = "zip"
+  source_dir  = "${path.module}/cloud_function"
+  output_path = "${path.module}/function.zip"
 }
 
 locals {
@@ -396,7 +403,7 @@ resource "google_storage_bucket_object" "upload_function_zip" {
   name           = "function.zip"
   source         = data.archive_file.function_package.output_path
   bucket         = google_storage_bucket.corporacion_cloud_function_creation.name
-  detect_md5hash = local.function_zip_sha256
+  detect_md5hash = local.filebase64sha256
 }
 
 resource "google_pubsub_topic" "dags_upload" {
