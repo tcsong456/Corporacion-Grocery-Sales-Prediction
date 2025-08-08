@@ -391,7 +391,7 @@ data "archive_file" "function_package" {
 
 data "archive_file" "function_package" {
   type        = "zip"
-  source_dir  = "${path.module}/cloud_function"
+  source_dir  = "${path.root}/cloud_function"
   output_path = "${path.module}/function.zip"
 }
 
