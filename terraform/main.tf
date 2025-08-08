@@ -372,22 +372,6 @@ resource "time_sleep" "sleep_after_composer_creation" {
 }
 
 provider "archive" {}
-/*
-data "archive_file" "function_package" {
-  type        = "zip"
-  output_path = "../cloud_function/function.zip"
-
-  source {
-    content  = file("../cloud_function/main.py")
-    filename = "main.py"
-  }
-
-  source {
-    content  = file("../cloud_function/requirements.txt")
-    filename = "requirements.txt"
-  }
-}
-*/
 
 data "archive_file" "function_package" {
   type        = "zip"
@@ -410,11 +394,6 @@ resource "google_pubsub_topic" "dags_upload" {
   name       = "cc3-bucket-events"
   depends_on = [time_sleep.wait_for_composer_apis]
 }
-/*
-data "google_project" "current" {
-  project_id = local.project_id
-}
-*/
 
 data "google_storage_project_service_account" "gcs" {
   project    = var.project_id
