@@ -403,7 +403,7 @@ resource "google_storage_bucket_object" "upload_function_zip" {
   name           = "function.zip"
   source         = data.archive_file.function_package.output_path
   bucket         = google_storage_bucket.corporacion_cloud_function_creation.name
-  detect_md5hash = local.filebase64sha256
+  detect_md5hash = local.function_zip_sha256
 }
 
 resource "google_pubsub_topic" "dags_upload" {
