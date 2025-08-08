@@ -389,8 +389,7 @@ data "archive_file" "function_package" {
 }
 
 locals {
-  function_zip_md5 = base64encode(
-    decodehex(filemd5(data.archive_file.function_package.output_path))
+  function_zip_md5 = filemd5(data.archive_file.function_package.output_path)
   )
 }
 
