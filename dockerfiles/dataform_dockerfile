@@ -4,4 +4,5 @@ WORKDIR /app
 COPY corpor_sales_dataform/ ./dataform/
 RUN npm install -g @dataform/cli
 WORKDIR /app/dataform
-CMD ["sh","-c","dataform run --dry-run=false"]
+CMD ["dataform","run","--dry-run=false","--actions","!tag:unit_test"]
+
