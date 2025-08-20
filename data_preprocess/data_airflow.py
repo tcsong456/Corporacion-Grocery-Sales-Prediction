@@ -1,14 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Jun  9 11:44:32 2025
-
-@author: congx
-"""
 import os
 import time
 from airflow import models
 from airflow.operators.python import PythonOperator
+from airflow.utils.trigger_rule import TriggerRule
 from airflow.providers.google.cloud.operators.dataproc import DataprocCreateBatchOperator
+from airflow.providers.google.cloud.operators.pubsub import PubSubPublishMessageOperator
 
 code_bucket = "corpor-sales-scripts"
 train_data_process_script = "gs://" + code_bucket + "/preprocess/train_data_process.py"
@@ -182,7 +178,23 @@ with models.DAG(
         batch=BATCH_CONFIG4,
         batch_id='final-process-batch'
         )
+    publish_all_done = PubSubPublishMessageOperator(
+        task_id="publish_message_to_topic",
+        project_id=project_id,
+        topic="all-preprocess-dags-complete",
+        messages=[{
+            "data": b"all dags completed",
+            "attributes": {
+                "date": "{{ ds }}",
+                "env": "test",
+                "run_id": "{{ ts_nodash }}",
+            },
+        }],
+        trigger_rule=TriggerRule.ALL_SUCCESS,
+    )
+
     create_batch_1 >> wait_for_quota_release_1 >> create_batch_2
     create_batch_2 >> wait_for_quota_release_2 >> create_batch_3
     create_batch_3 >> wait_for_quota_release_3 >> create_batch_4
     create_batch_4 >> wait_for_quota_release_4 >> create_batch_5
+    create_batch_5 >> publish_all_done

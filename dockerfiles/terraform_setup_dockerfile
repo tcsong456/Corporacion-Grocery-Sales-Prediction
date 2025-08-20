@@ -1,4 +1,5 @@
-FROM python:3.10-slim
+#FROM python:3.10-slim
+FROM python:3.10-slim-bookworm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
   unzip \
@@ -31,9 +32,14 @@ WORKDIR /app
 COPY kaggle.json /root/.kaggle/kaggle.json
 COPY shell_scripts/data_download.sh .
 COPY shell_scripts/run_terraform.sh .
+COPY shell_scripts/cloud_run_dataform.sh .
 COPY terraform/ ./terraform/
 COPY data_preprocess/ ./data_preprocess/
 COPY cloud_function/ ./cloud_function/
+COPY corpor_sales_dataform/ ./corpor_sales_dataform/
+#COPY dataform/ ./dataform/
+COPY dataform_app.py .
+COPY dockerfiles/dataform_dockerfile_automation .
 
 RUN dos2unix data_download.sh run_terraform.sh && \
     chmod 600 /root/.kaggle/kaggle.json && \

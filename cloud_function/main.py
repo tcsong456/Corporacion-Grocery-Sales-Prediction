@@ -80,7 +80,7 @@ def handler(event, context):
     file_name = message.get("name", "")
     print(f"[INFO] File uploaded: {file_name}")
 
-    if not file_name.startswith("dags/") or "data_airflow.py" not in file_name:
+    if not file_name.startswith("dags/"):
         print(f"[INFO] Ignoring file: {file_name}")
         return
 

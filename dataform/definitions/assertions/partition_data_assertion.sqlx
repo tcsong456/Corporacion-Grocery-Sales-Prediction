@@ -1,0 +1,22 @@
+config {
+    type: "assertion",
+    description: "assert the data is properly partitioned on desired columns",
+    tags: ["quality_check"]
+}
+
+WITH meta_table AS (
+    SELECT
+      ddl
+    FROM
+      `${dataform.projectConfig.defaultDatabase}.${dataform.projectConfig.defaultSchema}`.INFORMATION_SCHEMA.TABLES
+    WHERE table_name = "partitioned_store_item_data"
+)
+SELECT
+  ddl
+FROM meta_table
+WHERE
+  NOT (
+      REGEXP_CONTAINS(UPPER(ddl),r'PARTITION\s+BY\s+DATE')
+      AND
+      REGEXP_CONTAINS(UPPER(ddl),r'CLUSTER\s+BY\s+STORE_NBR\s*,\s*ITEM_NBR')
+  )

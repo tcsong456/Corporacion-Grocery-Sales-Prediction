@@ -1,0 +1,14 @@
+config {
+    type: "assertion",
+    tags: ["unit_test"]
+}
+
+SELECT *
+FROM ${ref("class_store_promo_sum_test_model_2017614")}
+WHERE store_nbr = 3 AND class = 1982
+  AND NOT (
+    class_store_promo_mean_past_14 = 0.0714
+    AND class_store_promo_sum_past_7 = 0
+    AND class_store_promo_sum_past_14 = 1
+    AND class_store_promo_mean_past_7 = 0
+  )
