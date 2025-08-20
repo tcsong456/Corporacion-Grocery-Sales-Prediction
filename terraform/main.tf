@@ -305,11 +305,11 @@ data "archive_file" "dataform_dockerfile_zip" {
   output_path = "${path.module}/dataform_files.zip"
 
   source {
-    content  = file(abspath("../dataform_dockerfile_automation"))
+    content  = file(abspath("../dockerfiles/dataform_dockerfile_automation"))
     filename = "Dockerfile"
   }
   source {
-    content  = file("../cloud_run_dataform.sh")
+    content  = file("../shell_scripts/cloud_run_dataform.sh")
     filename = "cloud_run_dataform.sh"
   }
 
