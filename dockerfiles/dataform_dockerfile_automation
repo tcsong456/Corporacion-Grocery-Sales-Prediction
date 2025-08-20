@@ -1,0 +1,15 @@
+FROM node:20-alpine
+
+RUN apk add --no-cache bash && \
+  npm install -g @dataform/cli@3
+
+WORKDIR /workspace
+COPY corpor_sales_dataform/ ./dataform/
+COPY cloud_run_dataform.sh .
+RUN sed -i 's/\r$//' ./cloud_run_dataform.sh && \
+  chmod +x ./cloud_run_dataform.sh
+
+ENV NODE_OPTIONS="--max-old-space-size=1536" \
+    MALLOC_ARENA_MAX="2"
+
+ENTRYPOINT ["./cloud_run_dataform.sh"]

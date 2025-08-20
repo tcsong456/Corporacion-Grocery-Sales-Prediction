@@ -1,0 +1,18 @@
+config {
+    type: "table",
+    name: "item_sales_first_last_test_model_2017614",
+    tags: ["unit_test"]
+}
+
+WITH param AS (
+  SELECT
+    DATE '2017-6-14' AS date
+)
+SELECT
+  item_nbr,
+  MIN(CASE WHEN d.date BETWEEN DATE_SUB(param.date,INTERVAL 7 DAY) AND DATE_SUB(param.date,INTERVAL 1 DAY)
+      AND unit_sales > 0 THEN DATE_DIFF(param.date,d.date,DAY) - 1 ELSE NULL END) AS item_last_sales_app_past_7_days,
+  ROUND(SUM(CASE WHEN d.date BETWEEN DATE_SUB(param.date,INTERVAL 7 DAY) AND DATE_SUB(param.date,INTERVAL 1 DAY)
+      AND unit_sales > 0 THEN 1 ELSE 0 END) / 7,4) AS item_percent_days_with_sales_last_7_days
+  FROM ${ref("mock_item_first_last_app_2017614")} d,param
+  GROUP BY item_nbr

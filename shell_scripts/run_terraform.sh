@@ -24,16 +24,24 @@ gcloud storage buckets add-iam-policy-binding gs://$backend_bucket \
 cd $(pwd)/terraform 
 sed -i 's/\r$//' main.tf
 terraform init -input=false -backend-config="credentials=/run/secrets/key.json"
+if gcloud eventarc triggers describe "trigger-after-all-dags-done" \
+  --location=${GCP_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
+  echo "Found remote trigger on GCP"
+  terraform import google_eventarc_trigger.dataform_on_airflow_completion \
+    projects/${PROJECT_ID}/locations/${GCP_REGION}/trigger-after-all-dags-done
+else
+  echo "Remote trigger not found,import skipped"
+fi
 
 terraform plan \
   -var="project_id=${PROJECT_ID}" \
   -var="umsa=${UMSA}" \
   -var="region=${GCP_REGION}" \
-  -var="build_id=local-run-000" 
+  -var="build_id=local-run-006"
 
 terraform apply \
   -var="project_id=${PROJECT_ID}" \
   -var="umsa=${UMSA}" \
   -var="region=${GCP_REGION}" \
-  -var="build_id=local-run-000" \
+  -var="build_id=local-run-006" \
   --auto-approve >> provisioning.output
