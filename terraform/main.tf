@@ -533,6 +533,10 @@ resource "google_storage_notification" "on_dags_upload" {
   event_types        = ["OBJECT_FINALIZE", "OBJECT_METADATA_UPDATE"]
   object_name_prefix = "dags/"
   payload_format     = "JSON_API_V1"
+  depends_on = [google_pubsub_topic_iam_binding.gcs_publisher]
+  lifecycle {
+    replace_triggered_by = [google_composer_environment.cc3_env_creation]
+  }
 }
 
 resource "time_sleep" "wait_for_notification" {
