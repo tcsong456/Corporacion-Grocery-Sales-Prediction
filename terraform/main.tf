@@ -109,12 +109,12 @@ resource "time_sleep" "wait_for_roles" {
   depends_on      = [google_project_iam_member.composer_roles]
 }
 
-resource  "google_artifact_registry_repository" "repo" {
-  project = local.project_id
-  location = local.region
+resource "google_artifact_registry_repository" "repo" {
+  project       = local.project_id
+  location      = local.region
   repository_id = "ml-builds"
-  format = "DOCKER"
-  depends_on = [time_sleep.wait_for_composer_apis]
+  format        = "DOCKER"
+  depends_on    = [time_sleep.wait_for_composer_apis]
 }
 
 module "vpc_creation" {
@@ -224,10 +224,10 @@ resource "time_sleep" "wait_for_network_and_firewall_creation" {
 }
 
 resource "google_storage_bucket" "build_ctx_bucket" {
-  name = "${local.project_id}-${local.region}-cb-build"
-  location = local.region
+  name                        = "${local.project_id}-${local.region}-cb-build"
+  location                    = local.region
   uniform_bucket_level_access = true
-  force_destroy = true
+  force_destroy               = true
 }
 
 resource "google_storage_bucket" "corporacion_data_bucket_creation" {
@@ -270,7 +270,7 @@ resource "time_sleep" "sleep_after_buckets_creation" {
   create_duration = "60s"
   depends_on = [google_storage_bucket.corporacion_data_bucket_creation,
     google_storage_bucket.corporacion_lib_bucket_creation,
-  google_storage_bucket.corporacion_scripts_bucket_creation,
+    google_storage_bucket.corporacion_scripts_bucket_creation,
   google_storage_bucket.build_ctx_bucket]
 }
 
@@ -299,17 +299,17 @@ resource "null_resource" "download_and_upload_gcs_connector" {
 }
 
 data "google_project" "current" {}
-  
+
 data "archive_file" "dataform_dockerfile_zip" {
-  type = "zip"
+  type        = "zip"
   output_path = "${path.module}/dataform_files.zip"
 
   source {
-    content = file(abspath("../dataform_dockerfile_automation"))
+    content  = file(abspath("../dataform_dockerfile_automation"))
     filename = "Dockerfile"
   }
   source {
-    content = file("../cloud_run_dataform.sh")
+    content  = file("../cloud_run_dataform.sh")
     filename = "cloud_run_dataform.sh"
   }
 
@@ -317,7 +317,7 @@ data "archive_file" "dataform_dockerfile_zip" {
     for_each = fileset("../corpor_sales_dataform", "**")
     #for_each = fileset("../dataform", "**")
     content {
-      content = file("../corpor_sales_dataform/${source.value}")
+      content  = file("../corpor_sales_dataform/${source.value}")
       filename = "corpor_sales_dataform/${source.value}"
       #content = file("../dataform/${source.value}")
       #filename = "dataform/${source.value}"
@@ -327,54 +327,54 @@ data "archive_file" "dataform_dockerfile_zip" {
 
 locals {
   dataform_zip_sha256 = filebase64sha256(data.archive_file.dataform_dockerfile_zip.output_path)
-  cloud_build_sa = "${data.google_project.current.number}@cloudbuild.gserviceaccount.com"
-  base_image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.repo.repository_id}/dataform"
-  image_tag = "1.0.0"
-  image_uri = "${local.base_image}:${local.image_tag}" 
+  cloud_build_sa      = "${data.google_project.current.number}@cloudbuild.gserviceaccount.com"
+  base_image          = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.repo.repository_id}/dataform"
+  image_tag           = "1.0.0"
+  image_uri           = "${local.base_image}:${local.image_tag}"
 }
 
 resource "google_artifact_registry_repository_iam_member" "cb_ar_writer" {
-  location = local.region
+  location   = local.region
   repository = google_artifact_registry_repository.repo.repository_id
-  role = "roles/artifactregistry.writer"
-  member = "serviceAccount:${local.cloud_build_sa}"
+  role       = "roles/artifactregistry.writer"
+  member     = "serviceAccount:${local.cloud_build_sa}"
 }
 
 resource "google_storage_bucket_iam_member" "cb_gcs_obj_viewer" {
   bucket = google_storage_bucket.build_ctx_bucket.name
-  role = "roles/storage.objectViewer"
+  role   = "roles/storage.objectViewer"
   member = "serviceAccount:${local.cloud_build_sa}"
 }
 
 locals {
   local_promo_dir   = "${path.module}/df_promo_long"
   local_promo_files = fileset(local.local_promo_dir, "*.parquet")
-  local_sales_dir = "${path.module}/df_sales_long"
+  local_sales_dir   = "${path.module}/df_sales_long"
   local_sales_files = fileset(local.local_sales_dir, "*.parquet")
 }
 
 resource "google_storage_bucket_object" "promo_parquet_objects" {
-  for_each     = local.local_promo_files
-  bucket       = google_storage_bucket.corporacion_data_bucket_creation.name
-  name         = "df_promo_long/${each.value}"                      # GCS object path
-  source       = "${local.local_promo_dir}/${each.value}"       # local file (absolute)
+  for_each   = local.local_promo_files
+  bucket     = google_storage_bucket.corporacion_data_bucket_creation.name
+  name       = "df_promo_long/${each.value}"            # GCS object path
+  source     = "${local.local_promo_dir}/${each.value}" # local file (absolute)
   depends_on = [time_sleep.sleep_after_buckets_creation]
 }
 
 resource "google_storage_bucket_object" "sales_parquet_objects" {
-  for_each     = local.local_sales_files
-  bucket       = google_storage_bucket.corporacion_data_bucket_creation.name
-  name         = "df_sales_long/${each.value}"                      # GCS object path
-  source       = "${local.local_sales_dir}/${each.value}"       # local file (absolute)
+  for_each   = local.local_sales_files
+  bucket     = google_storage_bucket.corporacion_data_bucket_creation.name
+  name       = "df_sales_long/${each.value}"            # GCS object path
+  source     = "${local.local_sales_dir}/${each.value}" # local file (absolute)
   depends_on = [time_sleep.sleep_after_buckets_creation]
 }
 
 resource "google_storage_bucket_object" "dataform_run_src" {
-  name = "source/dataform_run.zip"
-  bucket = google_storage_bucket.build_ctx_bucket.name
-  source = data.archive_file.dataform_dockerfile_zip.output_path
+  name           = "source/dataform_run.zip"
+  bucket         = google_storage_bucket.build_ctx_bucket.name
+  source         = data.archive_file.dataform_dockerfile_zip.output_path
   detect_md5hash = local.dataform_zip_sha256
-  depends_on = [time_sleep.sleep_after_buckets_creation]
+  depends_on     = [time_sleep.sleep_after_buckets_creation]
 }
 
 resource "google_storage_bucket_object" "train_data_process_script_upload" {
@@ -550,39 +550,39 @@ resource "google_bigquery_dataset" "bq_dataset_creation" {
 }
 
 resource "google_service_account" "dataform_runner" {
-  account_id = "dataform-runner"
+  account_id   = "dataform-runner"
   display_name = "Dataform Runner"
 }
 
 resource "google_project_iam_member" "dataform_job_user" {
   project = local.project_id
-  role = "roles/bigquery.jobUser"
-  member = "serviceAccount:${google_service_account.dataform_runner.email}"
+  role    = "roles/bigquery.jobUser"
+  member  = "serviceAccount:${google_service_account.dataform_runner.email}"
 }
 
 resource "google_project_iam_member" "dataform_ds_creator" {
   project = local.project_id
-  role = "roles/bigquery.user"
-  member = "serviceAccount:${google_service_account.dataform_runner.email}"
+  role    = "roles/bigquery.user"
+  member  = "serviceAccount:${google_service_account.dataform_runner.email}"
 }
 
 resource "google_bigquery_dataset_iam_member" "dst_editor" {
   dataset_id = google_bigquery_dataset.bq_dataset_creation.dataset_id
-  role = "roles/bigquery.dataEditor"
-  member = "serviceAccount:${google_service_account.dataform_runner.email}"
+  role       = "roles/bigquery.dataEditor"
+  member     = "serviceAccount:${google_service_account.dataform_runner.email}"
 }
 
 resource "google_storage_bucket_iam_member" "bq_read_gcs" {
   bucket = google_storage_bucket.corporacion_data_bucket_creation.name
-  role = "roles/storage.objectViewer"
+  role   = "roles/storage.objectViewer"
   member = "serviceAccount:${google_service_account.dataform_runner.email}"
 }
 
 resource "google_artifact_registry_repository_iam_member" "cr_ar_repo_reader" {
-  location = local.region
+  location   = local.region
   repository = google_artifact_registry_repository.repo.repository_id
-  role = "roles/artifactregistry.reader"
-  member = "serviceAccount:${google_service_account.dataform_runner.email}"
+  role       = "roles/artifactregistry.reader"
+  member     = "serviceAccount:${google_service_account.dataform_runner.email}"
 }
 
 resource "google_secret_manager_secret" "df_creds" {
@@ -601,14 +601,14 @@ resource "google_secret_manager_secret_version" "df_creds_version" {
   secret = google_secret_manager_secret.df_creds.name
   secret_data = jsonencode({
     projectId = local.project_id
-    location = local.region
+    location  = local.region
   })
 }
 
 resource "google_secret_manager_secret_iam_member" "df_creds_access" {
   secret_id = google_secret_manager_secret.df_creds.id
-  role   = "roles/secretmanager.secretAccessor"
-  member = "serviceAccount:${google_service_account.dataform_runner.email}"
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.dataform_runner.email}"
 }
 
 resource "google_cloud_run_v2_job" "dataform_run_job" {
@@ -624,7 +624,7 @@ resource "google_cloud_run_v2_job" "dataform_run_job" {
         secret {
           secret = google_secret_manager_secret.df_creds.name
           items {
-            path    = ".df-credentials.json"  # file name inside mount
+            path    = ".df-credentials.json" # file name inside mount
             version = "latest"
             mode    = 0440
           }
@@ -640,8 +640,8 @@ resource "google_cloud_run_v2_job" "dataform_run_job" {
         }
 
         env {
-        name  = "TAGS"
-        value = "prod"
+          name  = "TAGS"
+          value = "prod"
         }
         env {
           name  = "ACTIONS"
@@ -668,12 +668,12 @@ resource "google_cloud_run_v2_job" "dataform_run_job" {
     parallelism = 1
   }
   depends_on = [null_resource.container_built_and_push,
-    google_secret_manager_secret_iam_member.df_creds_access]  
+  google_secret_manager_secret_iam_member.df_creds_access]
 }
 
 
 resource "google_service_account" "workflow_sa" {
-  account_id = "workflow-sa"
+  account_id   = "workflow-sa"
   display_name = "service account of workflow"
 }
 
@@ -681,20 +681,20 @@ resource "google_cloud_run_v2_job_iam_member" "job_invoker" {
   project  = var.project_id
   location = var.region
   name     = google_cloud_run_v2_job.dataform_run_job.name
-  role   = "roles/run.invoker"
-  member = "serviceAccount:${google_service_account.workflow_sa.email}"
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${google_service_account.workflow_sa.email}"
 }
 
 resource "google_project_service_identity" "create_workflows_sa" {
-  project = local.project_id
-  service = "workflows.googleapis.com"
-  provider = google-beta   # add this if your provider requires beta for this resource
+  project    = local.project_id
+  service    = "workflows.googleapis.com"
+  provider   = google-beta # add this if your provider requires beta for this resource
   depends_on = [time_sleep.wait_for_composer_apis]
 }
 
 resource "google_workflows_workflow" "start_dataform_job" {
-  name = "start-dataform-job"
-  region = local.region
+  name            = "start-dataform-job"
+  region          = local.region
   service_account = google_service_account.workflow_sa.email
   source_contents = <<-YAML
     main:
@@ -710,56 +710,56 @@ resource "google_workflows_workflow" "start_dataform_job" {
           return: $${runResp.body}
   YAML
   depends_on = [time_sleep.wait_for_composer_apis,
-    google_project_service_identity.create_workflows_sa]
+  google_project_service_identity.create_workflows_sa]
 }
 
 resource "google_service_account" "dags_completion_trigger" {
-  account_id = "eventarc-trigger-sa"
+  account_id   = "eventarc-trigger-sa"
   display_name = "Eventarc trigger service account"
 }
 
 resource "google_project_iam_member" "eventarc_workflow_invoker" {
   project = local.project_id
-  role = "roles/workflows.invoker"
-  member = "serviceAccount:${google_service_account.dags_completion_trigger.email}"
+  role    = "roles/workflows.invoker"
+  member  = "serviceAccount:${google_service_account.dags_completion_trigger.email}"
 }
 
 resource "google_pubsub_topic_iam_member" "eventarc_subscriber" {
-  topic = google_pubsub_topic.preprocess_all_done.name
-  role = "roles/pubsub.subscriber"
+  topic  = google_pubsub_topic.preprocess_all_done.name
+  role   = "roles/pubsub.subscriber"
   member = "serviceAccount:service-${data.google_project.current.number}@gcp-sa-eventarc.iam.gserviceaccount.com"
 }
 
 resource "google_pubsub_topic_iam_member" "composer_publisher" {
-  topic = google_pubsub_topic.preprocess_all_done.name
-  role = "roles/pubsub.publisher"
+  topic  = google_pubsub_topic.preprocess_all_done.name
+  role   = "roles/pubsub.publisher"
   member = "serviceAccount:${local.umsa_fqn}"
 }
 
 resource "google_eventarc_trigger" "dataform_on_airflow_completion" {
-  name = "trigger-after-all-dags-done"
+  name     = "trigger-after-all-dags-done"
   location = local.region
-  
+
   matching_criteria {
     attribute = "type"
-    value = "google.cloud.pubsub.topic.v1.messagePublished"
+    value     = "google.cloud.pubsub.topic.v1.messagePublished"
   }
-  
+
   destination {
-      workflow = google_workflows_workflow.start_dataform_job.id
+    workflow = google_workflows_workflow.start_dataform_job.id
   }
-  
+
   transport {
     pubsub {
       topic = google_pubsub_topic.preprocess_all_done.id
     }
   }
-  
+
   service_account = google_service_account.dags_completion_trigger.email
-  
+
   depends_on = [google_project_iam_member.eventarc_workflow_invoker,
     google_pubsub_topic_iam_member.eventarc_subscriber,
-    google_pubsub_topic_iam_member.composer_publisher]
+  google_pubsub_topic_iam_member.composer_publisher]
 }
 
 resource "google_cloudfunctions2_function" "trigger_dag" {
@@ -788,7 +788,7 @@ resource "google_cloudfunctions2_function" "trigger_dag" {
       REGION       = local.region
       COMPOSER_ENV = "${local.project_id}-cc3"
       DAG_ID       = "corpor-sales-prediction"
-#      DAG_ID = "test_preprocess_done_signal"
+      #      DAG_ID = "test_preprocess_done_signal"
     }
     service_account_email = local.umsa_fqn
   }
@@ -812,10 +812,10 @@ resource "time_sleep" "wait_for_cloud_function" {
 }
 
 resource "google_storage_bucket_object" "upload_dag_to_cc3" {
-  name     = "dags/data_airflow.py"
-  source   = "../data_preprocess/data_airflow.py"
-#  name = "dags/dummy_run.py"
-#  source = "../data_preprocess/dummy_run.py"
+  name   = "dags/data_airflow.py"
+  source = "../data_preprocess/data_airflow.py"
+  #  name = "dags/dummy_run.py"
+  #  source = "../data_preprocess/dummy_run.py"
   bucket   = split("/", substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix, 5, -1))[0]
   metadata = { ci_build = var.build_id }
   depends_on = [time_sleep.sleep_after_composer_creation,
