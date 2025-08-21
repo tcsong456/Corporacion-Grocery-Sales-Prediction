@@ -824,3 +824,4 @@ resource "google_storage_bucket_object" "upload_dag_to_cc3" {
     time_sleep.wait_for_cloud_function,
   time_sleep.wait_for_data_upload]
 }
+ 
