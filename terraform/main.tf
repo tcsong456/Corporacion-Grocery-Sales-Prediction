@@ -315,12 +315,9 @@ data "archive_file" "dataform_dockerfile_zip" {
 
   dynamic "source" {
     for_each = fileset("../corpor_sales_dataform", "**")
-    #for_each = fileset("../dataform", "**")
     content {
       content  = file("../corpor_sales_dataform/${source.value}")
       filename = "corpor_sales_dataform/${source.value}"
-      #content = file("../dataform/${source.value}")
-      #filename = "dataform/${source.value}"
     }
   }
 }

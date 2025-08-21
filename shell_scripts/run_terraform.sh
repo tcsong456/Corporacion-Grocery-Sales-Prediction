@@ -6,7 +6,7 @@ GCP_REGION="europe-west1"
 UMSA="corpor-sales-sa"
 backend_bucket="tfstate-${PROJECT_ID}"
 
-if ! gsutil -b gs://${backend_bucket} &>/dev/null; then
+if ! gsutil ls -b gs://${backend_bucket} &>/dev/null; then
   echo "creating bucket ${backend_bucket}"
   gsutil mb -p ${PROJECT_ID} -l ${GCP_REGION} gs://${backend_bucket}
   gsutil uniformbucketlevelaccess set on gs://${backend_bucket}
