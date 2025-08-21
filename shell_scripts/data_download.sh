@@ -17,6 +17,7 @@ if [ ! -f ~/.kaggle/kaggle.json ];then
 fi
 COMMENT
 
+mkdir -p data/
 kaggle competitions download -c favorita-grocery-sales-forecasting --path data
 files=$(ls data/)
 unzip data/$files -d data/
