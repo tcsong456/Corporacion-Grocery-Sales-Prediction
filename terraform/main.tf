@@ -345,7 +345,7 @@ resource "google_storage_bucket_iam_member" "cb_gcs_obj_viewer" {
   role   = "roles/storage.objectViewer"
   member = "serviceAccount:${local.cloud_build_sa}"
 }
-
+/*
 locals {
   local_promo_dir   = "${path.module}/df_promo_long"
   local_promo_files = fileset(local.local_promo_dir, "*.parquet")
@@ -368,7 +368,7 @@ resource "google_storage_bucket_object" "sales_parquet_objects" {
   source     = "${local.local_sales_dir}/${each.value}" # local file (absolute)
   depends_on = [time_sleep.sleep_after_buckets_creation]
 }
-
+*/
 resource "google_storage_bucket_object" "dataform_run_src" {
   name           = "source/dataform_run.zip"
   bucket         = google_storage_bucket.build_ctx_bucket.name
