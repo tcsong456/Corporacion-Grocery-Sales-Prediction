@@ -69,7 +69,7 @@ jobs:
       - name: Install packages for downloading data
         run: |
           sudo apt-get update
-          sudo apt-get install -y unzip p7zip-full python3-pip
+          sudo apt-get install -y --no-install-recommends unzip p7zip-full python3-pip
           python3 -m pip install --user kaggle
           echo '$HOME/.local/bin' >> '$GITHUB_PATH'
       
@@ -79,7 +79,7 @@ jobs:
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
         run: |
           mkdir -p ~/.kaggle
-          printf '{"username":"%s","key":"%s"}' "KAGGLE_USERNAME" "KAGGLE_KEY" > ~/.kaggle/kaggle.json
+          printf '{"username":"%s","key":"%s"}' "$KAGGLE_USERNAME" "$KAGGLE_KEY" > ~/.kaggle/kaggle.json
           chmod 600 ~/.kaggle/kaggle.json
       
       - name: Download competition data
