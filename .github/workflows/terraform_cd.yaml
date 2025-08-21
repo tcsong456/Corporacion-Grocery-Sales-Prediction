@@ -66,6 +66,27 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
       
+      - name: Install packages for downloading data
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip p7zip-full python3-pip
+          python3 -m pip install --user kaggle
+          echo '$HOME/.local/bin' >> '$GITHUB_PATH'
+      
+      - name: Write kaggle credentials
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        run: |
+          mkdir -p ~/.kaggle
+          printf '{"username":"%s","key":"%s"}' "KAGGLE_USERNAME" "KAGGLE_KEY" > ~/.kaggle/kaggle.json
+          chmod 600 ~/.kaggle/kaggle.json
+      
+      - name: Download competition data
+        run: |
+          chomd +x shell_scripts/data_download.sh
+          shell_scripts/data_download.sh
+      
       - name: Download tf-plan artifact
         uses: dawidd6/action-download-artifact@v6
         with:
