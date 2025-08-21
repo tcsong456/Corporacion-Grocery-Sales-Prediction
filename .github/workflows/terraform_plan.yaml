@@ -57,19 +57,19 @@ jobs:
       
       - name: Ensure backend bucket exists
         run: |
-          if ! gsutil ls -b gs://${backend_bucket} &>/dev/null; then
-            echo "creating bucket ${backend_bucket}"
-            gsutil mb -p ${PROJECT_ID} -l ${GCP_REGION} gs://${backend_bucket}
-            gsutil uniformbucketlevelaccess set on gs://${backend_bucket}
+          backend_bucket="tfstate-${{ env.GCP_PROJECT }}"
+          if ! gsutil ls -b gs://$backend_bucket &>/dev/null; then
+            echo "creating bucket $backend_bucket"
+            gsutil mb -p ${{ env.GCP_PROJECT }} -l ${{ env.GCP_REGION }} gs://$backend_bucket
+            gsutil uniformbucketlevelaccess set on gs://$backend_bucket
           else
-            echo "gs://${backend_bucket} already exists"
+            echo "gs://$backend_bucket already exists"
           fi
-          gsutil versioning set on gs://${backend_bucket}
           gcloud storage buckets add-iam-policy-binding gs://$backend_bucket \
-            --member="serviceAccount:$UMSA@$PROJECT_ID.iam.gserviceaccount.com" \
+            --member="serviceAccount:${{ env.GCP_UMSA }}@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com" \
             --role="roles/storage.objectAdmin"
           gcloud storage buckets add-iam-policy-binding gs://$backend_bucket \
-            --member="serviceAccount:$UMSA@$PROJECT_ID.iam.gserviceaccount.com" \
+            --member="serviceAccount:${{ env.GCP_UMSA }}@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com" \
             --role="roles/storage.objectViewer"
       
       - name: Terraform init
