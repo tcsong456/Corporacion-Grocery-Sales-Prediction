@@ -84,7 +84,7 @@ jobs:
       
       - name: Download competition data
         run: |
-          chomd +x shell_scripts/data_download.sh
+          chmod +x shell_scripts/data_download.sh
           shell_scripts/data_download.sh
       
       - name: Download tf-plan artifact
