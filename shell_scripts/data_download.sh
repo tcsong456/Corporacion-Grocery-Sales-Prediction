@@ -1,5 +1,5 @@
 #!/bin/bash
-
+: <<'COMMENT'
 if command -v kaggle > /dev/null;then
   echo "kaggle is installed"
 else
@@ -15,6 +15,7 @@ if [ ! -f ~/.kaggle/kaggle.json ];then
     mv $opt ~/.kaggle/kaggle.json
   fi
 fi
+COMMENT
 
 kaggle competitions download -c favorita-grocery-sales-forecasting --path data
 files=$(ls data/)
