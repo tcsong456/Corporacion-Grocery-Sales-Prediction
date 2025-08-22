@@ -130,7 +130,8 @@ jobs:
               --filter="transport.pubsub.topic~$TOPIC" \
               --format='value(name)'
             )
-          echo $TRIGGER_NAME >> $GITHUB_ENV
+          echo "TRIGGER_NAME=%s\n" "$TRIGGER_NAME" >> "$GITHUB_ENV"
+          echo "Resolved trigger: $TRIGGER_NAME"
       
       - name: Wati for eventarc trigger to be active
         run: |
