@@ -19,6 +19,7 @@ variable "gcp_credential_file" {
   type    = string
   default = null
 }
+/*
 variable "build_id" {
   type        = string
   default     = "random run"
@@ -28,3 +29,4 @@ variable "inlcude_data_upload" {
   type    = bool
   default = false
 }
+*/
