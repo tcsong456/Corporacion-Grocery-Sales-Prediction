@@ -137,13 +137,17 @@ jobs:
         run: |
           set -eu
           : "${TRIGGER_NAME:?TRIGGER_NAME must be provided}"
-          for i in {1..60}; do
-            triggered=$(gcloud eventarc triggers describe $TRIGGER_NAME --location ${{ env.GCP_REGION }} \
-                          --format='value(conditions.ACTIVE.status)')
-            if [ "$triggered" = "True" ]; then break;fi
+          for i in {1..90}; do
+            sub="$(gcloud eventarc triggers describe "$TRIGGER_NAME" \
+                    --location "$GCP_REGION" \
+                    --format='value(transport.pubsub.subscription)')"
+            if [[ -n "$sub" ]]; then
+              echo "Trigger ready: $sub"
+              break
+            fi
             sleep 2
           done
-          [ "$triggered" = "True" ] || { echo "Eventarc trigger not ACTIVE"; exit 1; }
+          [[ -n "$sub" ]] || { echo "Eventarc trigger not ACTIVE"; exit 1; }
       
       - name: Trigger dag via sentinel
         env:
