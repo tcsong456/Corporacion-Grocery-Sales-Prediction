@@ -817,8 +817,8 @@ resource "google_storage_bucket_object" "upload_dag_to_cc3" {
   source = "../data_preprocess/data_airflow.py"
   #  name = "dags/dummy_run.py"
   #  source = "../data_preprocess/dummy_run.py"
-  bucket   = split("/", substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix, 5, -1))[0]
-#  metadata = { ci_build = var.build_id }
+  bucket = split("/", substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix, 5, -1))[0]
+  #  metadata = { ci_build = var.build_id }
   depends_on = [time_sleep.sleep_after_composer_creation,
     time_sleep.wait_for_notification,
     time_sleep.wait_for_cloud_function

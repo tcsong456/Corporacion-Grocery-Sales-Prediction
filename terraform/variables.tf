@@ -25,6 +25,6 @@ variable "build_id" {
   description = "used to trigger airflow run"
 }
 variable "inlcude_data_upload" {
-  type = bool
+  type    = bool
   default = false
 }
