@@ -120,6 +120,30 @@ jobs:
           : "${DATA_BUCKET:?DATA_BUCKET not set}"
           gcloud storage rsync -r --checksums-only data "gs://${{ env.DATA_BUCKET }}/"
       
+      - name: Get eventarc trigger name
+        env:
+          TOPIC: cc3-bucket-events
+        run: |
+          TRIGGER_NAME = $(
+            gcloud eventarc triggers list \
+              --location "${{ env.GCP_REGION }}" \
+              --filter="transport.pubsub.topic~$TOPIC" \
+              --format='value(name)'
+            )
+          echo $TRIGGER_NAME >> $GITHUB_ENV
+      
+      - name: Wati for eventarc trigger to be active
+        run: |
+          set -eu
+          : "${TRIGGER_NAME:?TRIGGER_NAME must be provided}"
+          for i in {1..60}; do
+            triggered=$(gcloud eventarc triggers describe $TRIGGER_NAME --location ${{ env.GCP_REGION }} \
+                          --format='value(conditions.ACTIVE.status)')
+            if [ "$triggered" = "True" ]; then break;fi
+            sleep 2
+          done
+          [ "$triggered" = "True" ] || { echo "Eventarc trigger not ACTIVE"; exit 1; }
+      
       - name: Trigger dag via sentinel
         env:
           CC3_ENV_NM: ${{ env.GCP_PROJECT }}-cc3
