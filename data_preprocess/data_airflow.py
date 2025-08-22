@@ -5,6 +5,7 @@ from airflow.operators.python import PythonOperator
 from airflow.utils.trigger_rule import TriggerRule
 from airflow.providers.google.cloud.operators.dataproc import DataprocCreateBatchOperator
 from airflow.providers.google.cloud.operators.pubsub import PubSubPublishMessageOperator
+from airflow.providers.google.cloud.sensors.gcs import GCSObjectExistenceSensor
 
 code_bucket = "corpor-sales-scripts"
 train_data_process_script = "gs://" + code_bucket + "/preprocess/train_data_process.py"
@@ -127,6 +128,14 @@ with models.DAG(
     dag_id='corpor-sales-prediction',
     schedule_interval=None,
 ):
+    wait_for_data_existance = GCSObjectExistenceSensor(
+      task_id="wait_train_exists",
+      bucket="corpor-sales-data",
+      object="train.csv",  
+      mode="reschedule",
+      poke_interval=30,
+      timeout=6*60*60
+      )
     create_batch_1 = DataprocCreateBatchOperator(
         task_id="train_data_process",
         project_id=project_id,
@@ -193,7 +202,7 @@ with models.DAG(
         trigger_rule=TriggerRule.ALL_SUCCESS,
     )
 
-    create_batch_1 >> wait_for_quota_release_1 >> create_batch_2
+    wait_for_data_existance >> create_batch_1 >> wait_for_quota_release_1 >> create_batch_2
     create_batch_2 >> wait_for_quota_release_2 >> create_batch_3
     create_batch_3 >> wait_for_quota_release_3 >> create_batch_4
     create_batch_4 >> wait_for_quota_release_4 >> create_batch_5
