@@ -273,7 +273,7 @@ resource "time_sleep" "sleep_after_buckets_creation" {
     google_storage_bucket.corporacion_scripts_bucket_creation,
   google_storage_bucket.build_ctx_bucket]
 }
-
+/*
 resource "google_storage_bucket_object" "corpor_datasets_upload_to_gcs" {
   for_each   = fileset("../data/", "*")
   source     = "../data/${each.value}"
@@ -286,7 +286,7 @@ resource "time_sleep" "wait_for_data_upload" {
   create_duration = "30s"
   depends_on      = [google_storage_bucket_object.corpor_datasets_upload_to_gcs]
 }
-
+*/
 resource "null_resource" "download_and_upload_gcs_connector" {
   provisioner "local-exec" {
     command     = <<EOT
@@ -527,8 +527,8 @@ resource "google_pubsub_topic_iam_binding" "gcs_publisher" {
 resource "google_storage_notification" "on_dags_upload" {
   bucket             = split("/", substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix, 5, -1))[0]
   topic              = google_pubsub_topic.dags_upload.id
-  event_types        = ["OBJECT_FINALIZE", "OBJECT_METADATA_UPDATE"]
-  object_name_prefix = "dags/"
+  event_types        = ["OBJECT_FINALIZE"]
+  object_name_prefix = "dags/_trigger/"
   payload_format     = "JSON_API_V1"
   depends_on         = [google_pubsub_topic_iam_binding.gcs_publisher]
   lifecycle {
@@ -817,10 +817,11 @@ resource "google_storage_bucket_object" "upload_dag_to_cc3" {
   source = "../data_preprocess/data_airflow.py"
   #  name = "dags/dummy_run.py"
   #  source = "../data_preprocess/dummy_run.py"
-  bucket   = split("/", substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix, 5, -1))[0]
-  metadata = { ci_build = var.build_id }
+  bucket = split("/", substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix, 5, -1))[0]
+  #  metadata = { ci_build = var.build_id }
   depends_on = [time_sleep.sleep_after_composer_creation,
     time_sleep.wait_for_notification,
-    time_sleep.wait_for_cloud_function,
-  time_sleep.wait_for_data_upload]
+    time_sleep.wait_for_cloud_function
+  ]
 }
+#time_sleep.wait_for_data_upload
