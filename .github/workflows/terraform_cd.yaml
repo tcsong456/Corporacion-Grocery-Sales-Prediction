@@ -118,7 +118,7 @@ jobs:
         run: |
           set -euo pipefail
           : "${DATA_BUCKET:?DATA_BUCKET not set}"
-          gcloud storage rsync -r --checksum data "gs://${{ env.DATA_BUCKET }}/"
+          gcloud storage rsync -r --checksums-only data "gs://${{ env.DATA_BUCKET }}/"
       
       - name: Trigger dag via sentinel
         env:
