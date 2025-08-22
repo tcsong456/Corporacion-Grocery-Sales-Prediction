@@ -124,7 +124,7 @@ jobs:
         env:
           TOPIC: cc3-bucket-events
         run: |
-          TRIGGER_NAME = $(
+          TRIGGER_NAME=$(
             gcloud eventarc triggers list \
               --location "${{ env.GCP_REGION }}" \
               --filter="transport.pubsub.topic~$TOPIC" \
