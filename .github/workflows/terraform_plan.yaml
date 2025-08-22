@@ -101,7 +101,8 @@ jobs:
           TF_VAR_region: ${{ env.GCP_REGION }}
           TF_VAR_umsa: ${{ env.GCP_UMSA }}
           TF_VAR_build_id: ${{ github.run_id }}-${{ github.sha }}
-        run: terraform plan -no-color -out=tfplan.bin
+        run: terraform plan -no-color -input=false \
+          -out=tfplan.bin
       
       - name: Summary
         run: |

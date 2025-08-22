@@ -24,3 +24,7 @@ variable "build_id" {
   default     = "random run"
   description = "used to trigger airflow run"
 }
+variable "inlcude_data_upload" {
+  type = bool
+  default = false
+}

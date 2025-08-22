@@ -26,6 +26,7 @@ env:
   GCP_REGION: europe-west1
   TF_VERSION: 1.9.2
   GCP_UMSA: corpor-sales-sa
+  DATA_BUCKET: corpor-sales-data
 
 jobs:
   terraform-apply:
@@ -111,4 +112,20 @@ jobs:
           TF_VAR_UMSA: ${{ env.GCP_UMSA }}
         run: terraform apply -input=false --auto-approve tfplan.bin
       
+      - name: Upload data to GCS
+        env:
+          DATA_BUCKET: ${{ env.DATA_BUCKET }}
+        run: |
+          set -euo pipefail
+          : "${DATA_BUCKET:?DATA_BUCKET not set}"
+          gcloud storage rsync -r --checksum data "gs://${{ env.DATA_BUCKET }}/"
       
+      - name: Trigger dag via sentinel
+        env:
+          CC3_ENV_NM: ${{ env.GCP_PROJECT }}-cc3
+        run: |
+          set -eu
+          DAG_PREFIX=$(gcloud composer environments describe "$CC3_ENV_NM" --location "${{ env.GCP_REGION }}" --format='value(config.dagGcsPrefix)')
+          DATA_BUCKET=$(echo "$DAG_PREFIX" | sed -e 's#^gs://##' -e 's#/.*$##')
+          printf '{"run_id":"%s","ts":"%s"}\n' "${{ github.run_id }}" "$(date -Iseconds)" > run.json
+          gcloud storage cp run.json "gs://${DATA_BUCKET}/dags/_trigger/run_${{ github.run_id }}.json"
