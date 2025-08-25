@@ -5,6 +5,9 @@ gcloud config set project "$PROJECT_ID"
 GCP_REGION="europe-west1"
 UMSA="corpor-sales-sa"
 backend_bucket="tfstate-${PROJECT_ID}"
+CC3_ENV_NM="${PROJECT_ID}-cc3"
+SALES_BUCKT="corpor-sales-data"
+TOPIC="cc3-bucket-events"
 
 if ! gsutil ls -b gs://${backend_bucket} &>/dev/null; then
   echo "creating bucket ${backend_bucket}"
@@ -37,11 +40,33 @@ terraform plan \
   -var="project_id=${PROJECT_ID}" \
   -var="umsa=${UMSA}" \
   -var="region=${GCP_REGION}" \
-  -var="build_id=local-run-006"
 
 terraform apply \
   -var="project_id=${PROJECT_ID}" \
   -var="umsa=${UMSA}" \
   -var="region=${GCP_REGION}" \
-  -var="build_id=local-run-006" \
   --auto-approve >> provisioning.output
+
+gcloud storage rsync -r --checksums-only ../data "gs://$SALES_BUCKT/"
+TRIGGER_NAME=$(
+  gcloud eventarc triggers list \
+    --location "$GCP_REGION" \
+    --filter="transport.pubsub.topic~$TOPIC" \
+    --format='value(name)'
+  )
+for i in {1..90}; do
+  sub="$(gcloud eventarc triggers describe "$TRIGGER_NAME" \
+          --location "$GCP_REGION" \
+          --format='value(transport.pubsub.subscription)')"
+  if [[ -n "$sub" ]]; then
+    echo "Trigger ready: $sub"
+    break
+  fi
+  sleep 2
+done
+[[ -n "$sub" ]] || { echo "Eventarc trigger not ACTIVE"; exit 1; }
+
+DAG_PREFIX=$(gcloud composer environments describe "$CC3_ENV_NM" --location "$GCP_REGION" --format='value(config.dagGcsPrefix)')
+DATA_BUCKET=$(echo "$DAG_PREFIX" | sed -e 's#^gs://##' -e 's#/.*$##')
+printf '{"ts":"%s"}\n' "$(date -Iseconds)" > run.json
+gcloud storage cp run.json "gs://$DATA_BUCKET/dags/_trigger/run.json"
