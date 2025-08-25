@@ -788,8 +788,8 @@ resource "google_cloudfunctions2_function" "trigger_dag" {
       PROJECT_ID   = local.project_id
       REGION       = local.region
       COMPOSER_ENV = "${local.project_id}-cc3"
-      #DAG_ID       = "corpor-sales-prediction"
-      DAG_ID = "test_preprocess_done_signal"
+      DAG_ID       = "corpor-sales-prediction"
+      #DAG_ID = "test_preprocess_done_signal"
     }
     service_account_email = local.umsa_fqn
   }
@@ -813,10 +813,10 @@ resource "time_sleep" "wait_for_cloud_function" {
 }
 
 resource "google_storage_bucket_object" "upload_dag_to_cc3" {
-  #name   = "dags/data_airflow.py"
-  #source = "../data_preprocess/data_airflow.py"
-  name = "dags/dummy_run.py"
-  source = "../data_preprocess/dummy_run.py"
+  name   = "dags/data_airflow.py"
+  source = "../data_preprocess/data_airflow.py"
+  #name   = "dags/dummy_run.py"
+  #source = "../data_preprocess/dummy_run.py"
   bucket = split("/", substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix, 5, -1))[0]
   #  metadata = { ci_build = var.build_id }
   depends_on = [time_sleep.sleep_after_composer_creation,
@@ -824,4 +824,3 @@ resource "google_storage_bucket_object" "upload_dag_to_cc3" {
     time_sleep.wait_for_cloud_function
   ]
 }
-#time_sleep.wait_for_data_upload
