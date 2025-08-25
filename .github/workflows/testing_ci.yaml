@@ -1,0 +1,171 @@
+name: CI Testing
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  
+concurrency:
+  group: dataform-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GCP_PROJECT: corporacion-sales-prediction
+  GCP_REGION: europe-west1
+  DATAFORM_VERSION: 3.0.24
+  CI_DATASET_ID: df_ci_${{ github.run_id }}
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+     
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+     
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+     
+      - name: Install deps
+        run: |
+          pip install -r requirements.txt
+   
+      - name: Flake8 linting test
+        run: |
+          flake8 tests/
+          
+  airflow-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build pytest image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: dockerfiles/pytest_dockerfile
+          tags: pytest-unit-test:latest
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Check for GCP key
+        run: |
+          if [ -z "${{ secrets.GCP_KEY_JSON }}" ];then
+            echo "no GCP key is saved on github as secret keys,please download the GCP key and save it as github secret first"
+            exit 1
+          fi
+      - name: Write GCP SA key
+        run: |
+          printf '%s' '${{ secrets.GCP_KEY_JSON }}' > key.json
+      - name: Run pytest unit-test in a container
+        run: |
+          set -e
+          docker run --rm -v "${{ github.workspace }}:/app" \
+          -e GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/key.json \
+          -e GCP_PROJECT=corporacion-sales-prediction \
+          -e GCP_REGION=europe-west1 \
+          $( [ -f key.json ] && echo --mount type=bind,src="${{ github.workspace }}/key.json",dst=/run/secrets/key.json ) \
+          pytest-unit-test:latest
+     
+      - name: Upload JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-python
+          path: junit-python.xml
+
+  dataform-npm-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup node js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "npm"
+          cache-dependency-path: js_tests/package-lock.json
+          
+      - name: Install npm deps
+        working-directory: js_tests
+        run: npm ci
+        
+      - name: Run js tests
+        working-directory: js_tests
+        env:
+          CI: true
+        run: npm test --runInBand
+        
+      - name: Check gcp envs
+        run: |
+          if [ -z "${{ env.GCP_PROJECT }}" || -z "${{ secrets.GCP_KEY_JSON }}" ]; then
+            echo "GCP project not set"
+            exit 1
+          fi
+        
+      - name: Authenticate google cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_KEY_JSON }}
+      
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT }}
+          install_components: bq
+          
+      - name: gcloud active accounts
+        run: gcloud auth list
+        
+      - name: Create CI ephemeral datasets
+        run: |
+          bq --location="${{ env.GCP_REGION }}" mk -f -d "${{ env.GCP_PROJECT }}:${{ env.CI_DATASET_ID }}"
+          bq --location="${{ env.GCP_REGION }}" mk -f -d "${{ env.GCP_PROJECT }}:${{ env.CI_DATASET_ID }}_assertions"
+      
+      - name: Install Dataform CLI globally
+        run: npm i -g @dataform/cli@${{ env.DATAFORM_VERSION }}
+      
+      - name: Manually generate workflow_settings.yaml
+        working-directory: corpor_sales_dataform
+        run: |
+          cat <<EOF > workflow_settings.yaml
+          dataformCoreVersion: ${{ env.DATAFORM_VERSION }}
+          defaultProject: ${{ env.GCP_PROJECT }}
+          defaultLocation: ${{ env.GCP_REGION }}
+          defaultDataset: ${{ env.CI_DATASET_ID }}
+          defaultAssertionDataset: ${{ env.CI_DATASET_ID }}_assertions
+          EOF
+          echo "-----workflow_settings.yaml-----"
+          cat workflow_settings.yaml
+      
+      - name: Write SA key for ADC
+        run: |
+          printf '%s' '${{ secrets.GCP_KEY_JSON }}' > /tmp/gcp-creds.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-creds.json" >> $GITHUB_ENV
+    
+      - name: Create minimal .df-credentials.json
+        working-directory: corpor_sales_dataform
+        run: |
+          cat > .df-credentials.json <<EOF
+          { "projectId": "${{ env.GCP_PROJECT }}", "location": "${{ env.GCP_REGION }}" }
+          EOF
+          cat .df-credentials.json
+
+      - name: Run dataform test
+        working-directory: corpor_sales_dataform
+        run: |
+          dataform compile
+          dataform run --full-refresh --tags unit_test
+      
+      - name: Clean up CI datasets
+        if: always()
+        run: |
+          bq rm -r -f -d "${{ env.GCP_PROJECT }}:${{ env.CI_DATASET_ID }}" || echo "Dataset may not exist. Skipping."
+          bq rm -r -f -d "${{ env.GCP_PROJECT }}:${{ env.CI_DATASET_ID }}_assertions" || echo "Assertion dataset may not exist. Skipping."
+          
