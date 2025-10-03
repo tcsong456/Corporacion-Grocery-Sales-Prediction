@@ -4,9 +4,9 @@ function promo_indicator_pivot(startDate,keyCol,refTable,prefix) {
     const padding = n =>  String(n).padStart(2,'0');
     const [year, month, day] = startDate.split("-").map(Number);
     const d0 = new Date(Date.UTC(year, month - 1, day)),d1 = new Date(d0);
-    d1.setDate(d1.getDate() + 15);
+    d1.setUTCDate(d1.getUTCDate() + 15);
     
-    for (let d=new Date(d0);d<=d1;d.setDate(d.getDate()+1)) {
+    for (let d=new Date(d0);d<=d1;d.setUTCDate(d.getUTCDate()+1)) {
         const y = d.getUTCFullYear(),
               m = padding(d.getUTCMonth() + 1),
               dd = padding(d.getUTCDate());

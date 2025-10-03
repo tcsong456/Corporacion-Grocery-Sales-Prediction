@@ -35,10 +35,11 @@ dates.forEach(date => {
     const viewName = `merge_features_${date.replace(/-/g,'')}`;
     publish(viewName,{type:"view", tags: ["prod"]}).query(ctx => merge_datasets(datasets,date,ctx,"store_item_class"))
 })
-
+/*
 publish("df_train",{type:"view", tags: ["prod"]}).query(ctx => `
                                         ${dates.map((date,i) => `
                                                ${i >0 ? "UNION ALL\n" : ""}SELECT * FROM 
                                                            ${ctx.ref(`merge_features_${date.replace(/-/g,'')}`)}     
                                             `).join("\n")}                    
                                         `);
+*/

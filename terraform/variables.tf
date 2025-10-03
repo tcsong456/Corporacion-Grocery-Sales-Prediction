@@ -19,3 +19,21 @@ variable "gcp_credential_file" {
   type    = string
   default = null
 }
+variable "trainer_sa" {
+  type = string
+  description = "training service account"
+}
+variable "pipeline_sa" {
+  type = string
+  description = "pipeline service account"
+}
+variable "kfp_sa" {
+  type = string
+  description = "kfp service account"
+}
+variable "preds_dataset" {
+  type = string
+}
+variable "preds_table" {
+  type = string
+}

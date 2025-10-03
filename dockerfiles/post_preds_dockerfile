@@ -1,0 +1,25 @@
+FROM python:3.10-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC
+  
+RUN python -m pip install --upgrade pip && \
+    pip install --no-cache-dir \
+      google-cloud-bigquery \
+      google-cloud-storage \
+      fastapi \
+      uvicorn \
+      numpy \
+      gcsfs \
+      pyarrow \
+      db-dtypes \
+      pandas && \
+    pip check
+
+WORKDIR /app
+COPY post_preds_process.py .
+RUN chmod +x post_preds_process.py
+
+CMD ["uvicorn","post_preds_process:app","--host","0.0.0.0","--port","8080"]

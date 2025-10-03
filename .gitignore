@@ -20,6 +20,8 @@ js_tests/node_modules/
 **/__pycache__/
 **/dummy*
 *.zip
+./*.json
+checkpoints/
 
 # C extensions
 *.so
@@ -42,7 +44,9 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
 MANIFEST
+.pytest_cache/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

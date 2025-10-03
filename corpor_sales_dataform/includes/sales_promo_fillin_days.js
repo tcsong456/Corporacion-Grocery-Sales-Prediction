@@ -12,7 +12,7 @@ function find_first_last(targetDate,targetCol,windows,keyCols,refTable,prefix) {
                                                   ELSE NULL END)
                                                   AS ${prefix}_last_${target_flag}_app_past_${w}_days`,
                                                   `MAX(CASE WHEN date BETWEEN ${window_start} AND ${window_end} AND 
-                                                  ${targetCol} > 0 THEN DATE_DIFF(DATE('${targetDate}'),date,DAY)
+                                                  ${targetCol} > 0 THEN DATE_DIFF(DATE('${targetDate}'),date,DAY) - 1
                                                   ELSE NULL END)
                                                   AS ${prefix}_first_${target_flag}_app_past_${w}_days`];
                                       if (targetCol==="unit_sales") {

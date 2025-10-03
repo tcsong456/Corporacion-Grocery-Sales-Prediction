@@ -4,7 +4,7 @@ function buildWeeklyDates(startDate,period) {
 
     for (let i=0;i<period;i++) {
         const currentDate = new Date(startDate)
-        currentDate.setDate(currentDate.getDate()+i*7)
+        currentDate.setUTCDate(currentDate.getUTCDate()+i*7)
         const y = currentDate.getFullYear(),
               m = padding(currentDate.getMonth()+1),
               dd = padding(currentDate.getDate());
