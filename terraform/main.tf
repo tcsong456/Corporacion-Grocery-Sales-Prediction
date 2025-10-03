@@ -48,7 +48,10 @@ locals {
     "roles/storage.objectViewer",
     "roles/storage.objectCreator",
     "roles/bigquery.dataEditor",
-    "roles/bigquery.jobUser"
+    "roles/bigquery.jobUser",
+    "roles/aiplatform.user",
+    "roles/artifactregistry.admin",
+    "roles/pubsub.publisher"
   ]
   composer_apis = [
     "dataproc.googleapis.com",
@@ -71,7 +74,8 @@ locals {
     "cloudbilling.googleapis.com",
     "secretmanager.googleapis.com",
     "workflows.googleapis.com",
-    "workflowexecutions.googleapis.com"
+    "workflowexecutions.googleapis.com",
+    "aiplatform.googleapis.com"
   ]
 }
 
@@ -186,6 +190,7 @@ resource "google_compute_firewall" "allow_ingress_on_all" {
   module.vpc_creation]
 }
 
+/*
 resource "google_compute_firewall" "allow_egress_on_all" {
   name               = "allow-egress-internal"
   network            = "corpor-sales-vpc"
@@ -200,6 +205,7 @@ resource "google_compute_firewall" "allow_egress_on_all" {
   module.vpc_creation]
 }
 
+
 resource "google_compute_firewall" "allow_egress_on_google_apis" {
   name               = "allow-google-apis-egress"
   network            = "corpor-sales-vpc"
@@ -213,18 +219,26 @@ resource "google_compute_firewall" "allow_egress_on_google_apis" {
   depends_on = [time_sleep.wait_for_roles,
   module.vpc_creation]
 }
+*/
 
 resource "time_sleep" "wait_for_network_and_firewall_creation" {
   create_duration = "120s"
   depends_on = [module.vpc_creation,
     google_compute_firewall.allow_ingress_on_all,
-    google_compute_firewall.allow_egress_on_all,
-    google_compute_firewall.allow_egress_on_google_apis
+    #google_compute_firewall.allow_egress_on_all,
+    #google_compute_firewall.allow_egress_on_google_apis
   ]
 }
 
 resource "google_storage_bucket" "build_ctx_bucket" {
   name                        = "${local.project_id}-${local.region}-cb-build"
+  location                    = local.region
+  uniform_bucket_level_access = true
+  force_destroy               = true
+}
+
+resource "google_storage_bucket" "build_lock_bucket" {
+  name = "corpor-sales-lock"
   location                    = local.region
   uniform_bucket_level_access = true
   force_destroy               = true
@@ -236,7 +250,6 @@ resource "google_storage_bucket" "corporacion_data_bucket_creation" {
   location                    = local.region
   uniform_bucket_level_access = true
   force_destroy               = true
-  depends_on                  = [time_sleep.wait_for_network_and_firewall_creation]
 }
 
 resource "google_storage_bucket" "corporacion_lib_bucket_creation" {
@@ -245,7 +258,6 @@ resource "google_storage_bucket" "corporacion_lib_bucket_creation" {
   location                    = local.region
   uniform_bucket_level_access = true
   force_destroy               = true
-  depends_on                  = [time_sleep.wait_for_network_and_firewall_creation]
 }
 
 resource "google_storage_bucket" "corporacion_scripts_bucket_creation" {
@@ -254,7 +266,6 @@ resource "google_storage_bucket" "corporacion_scripts_bucket_creation" {
   location                    = local.region
   uniform_bucket_level_access = true
   force_destroy               = true
-  depends_on                  = [time_sleep.wait_for_network_and_firewall_creation]
 }
 
 resource "google_storage_bucket" "corporacion_cloud_function_creation" {
@@ -263,7 +274,6 @@ resource "google_storage_bucket" "corporacion_cloud_function_creation" {
   location                    = local.region
   uniform_bucket_level_access = true
   force_destroy               = true
-  depends_on                  = [time_sleep.wait_for_network_and_firewall_creation]
 }
 
 resource "time_sleep" "sleep_after_buckets_creation" {
@@ -273,7 +283,7 @@ resource "time_sleep" "sleep_after_buckets_creation" {
     google_storage_bucket.corporacion_scripts_bucket_creation,
   google_storage_bucket.build_ctx_bucket]
 }
-/*
+
 resource "google_storage_bucket_object" "corpor_datasets_upload_to_gcs" {
   for_each   = fileset("../data/", "*")
   source     = "../data/${each.value}"
@@ -286,7 +296,7 @@ resource "time_sleep" "wait_for_data_upload" {
   create_duration = "30s"
   depends_on      = [google_storage_bucket_object.corpor_datasets_upload_to_gcs]
 }
-*/
+
 resource "null_resource" "download_and_upload_gcs_connector" {
   provisioner "local-exec" {
     command     = <<EOT
@@ -335,6 +345,7 @@ resource "google_artifact_registry_repository_iam_member" "cb_ar_writer" {
   repository = google_artifact_registry_repository.repo.repository_id
   role       = "roles/artifactregistry.writer"
   member     = "serviceAccount:${local.cloud_build_sa}"
+  depends_on = [time_sleep.wait_for_roles]
 }
 
 resource "google_storage_bucket_iam_member" "cb_gcs_obj_viewer" {
@@ -353,16 +364,16 @@ locals {
 resource "google_storage_bucket_object" "promo_parquet_objects" {
   for_each   = local.local_promo_files
   bucket     = google_storage_bucket.corporacion_data_bucket_creation.name
-  name       = "df_promo_long/${each.value}"            # GCS object path
-  source     = "${local.local_promo_dir}/${each.value}" # local file (absolute)
+  name       = "df_promo_long/${each.value}"            
+  source     = "${local.local_promo_dir}/${each.value}" 
   depends_on = [time_sleep.sleep_after_buckets_creation]
 }
 
 resource "google_storage_bucket_object" "sales_parquet_objects" {
   for_each   = local.local_sales_files
   bucket     = google_storage_bucket.corporacion_data_bucket_creation.name
-  name       = "df_sales_long/${each.value}"            # GCS object path
-  source     = "${local.local_sales_dir}/${each.value}" # local file (absolute)
+  name       = "df_sales_long/${each.value}"            
+  source     = "${local.local_sales_dir}/${each.value}" 
   depends_on = [time_sleep.sleep_after_buckets_creation]
 }
 
@@ -509,6 +520,7 @@ resource "google_pubsub_topic" "dags_upload" {
 
 resource "google_pubsub_topic" "preprocess_all_done" {
   name = "all-preprocess-dags-complete"
+  depends_on = [time_sleep.wait_for_composer_apis]
 }
 
 data "google_storage_project_service_account" "gcs" {
@@ -550,9 +562,24 @@ resource "google_bigquery_dataset" "bq_dataset_creation" {
   }
 }
 
+resource "google_bigquery_dataset" "deploy_bq_dataset_creation" {
+  dataset_id = "corpor_sales_submission"
+  location   = local.region
+  lifecycle {
+    ignore_changes        = [labels]
+    create_before_destroy = true
+  }
+}
+
 resource "google_service_account" "dataform_runner" {
   account_id   = "dataform-runner"
   display_name = "Dataform Runner"
+}
+
+resource "google_bigquery_dataset_iam_member" "dst_editor" {
+  dataset_id = google_bigquery_dataset.bq_dataset_creation.dataset_id
+  role       = "roles/bigquery.dataEditor"
+  member     = "serviceAccount:${google_service_account.dataform_runner.email}"
 }
 
 resource "google_project_iam_member" "dataform_job_user" {
@@ -567,10 +594,10 @@ resource "google_project_iam_member" "dataform_ds_creator" {
   member  = "serviceAccount:${google_service_account.dataform_runner.email}"
 }
 
-resource "google_bigquery_dataset_iam_member" "dst_editor" {
-  dataset_id = google_bigquery_dataset.bq_dataset_creation.dataset_id
-  role       = "roles/bigquery.dataEditor"
-  member     = "serviceAccount:${google_service_account.dataform_runner.email}"
+resource "google_project_iam_member" "dataform_publisher" {
+  project = local.project_id
+  role    = "roles/pubsub.publisher"
+  member  = "serviceAccount:${google_service_account.dataform_runner.email}"
 }
 
 resource "google_storage_bucket_iam_member" "bq_read_gcs" {
@@ -584,6 +611,7 @@ resource "google_artifact_registry_repository_iam_member" "cr_ar_repo_reader" {
   repository = google_artifact_registry_repository.repo.repository_id
   role       = "roles/artifactregistry.reader"
   member     = "serviceAccount:${google_service_account.dataform_runner.email}"
+  depends_on = [time_sleep.wait_for_roles]
 }
 
 resource "google_secret_manager_secret" "df_creds" {
@@ -625,7 +653,7 @@ resource "google_cloud_run_v2_job" "dataform_run_job" {
         secret {
           secret = google_secret_manager_secret.df_creds.name
           items {
-            path    = ".df-credentials.json" # file name inside mount
+            path    = ".df-credentials.json"
             version = "latest"
             mode    = 0440
           }
@@ -689,7 +717,7 @@ resource "google_cloud_run_v2_job_iam_member" "job_invoker" {
 resource "google_project_service_identity" "create_workflows_sa" {
   project    = local.project_id
   service    = "workflows.googleapis.com"
-  provider   = google-beta # add this if your provider requires beta for this resource
+  provider   = google-beta
   depends_on = [time_sleep.wait_for_composer_apis]
 }
 
@@ -788,8 +816,8 @@ resource "google_cloudfunctions2_function" "trigger_dag" {
       PROJECT_ID   = local.project_id
       REGION       = local.region
       COMPOSER_ENV = "${local.project_id}-cc3"
-      DAG_ID       = "corpor-sales-prediction"
-      #DAG_ID = "test_preprocess_done_signal"
+      #DAG_ID       = "corpor-sales-prediction"
+      DAG_ID = "test_preprocess_done_signal"
     }
     service_account_email = local.umsa_fqn
   }
@@ -818,9 +846,642 @@ resource "google_storage_bucket_object" "upload_dag_to_cc3" {
   #name   = "dags/dummy_run.py"
   #source = "../data_preprocess/dummy_run.py"
   bucket = split("/", substr(google_composer_environment.cc3_env_creation.config[0].dag_gcs_prefix, 5, -1))[0]
-  #  metadata = { ci_build = var.build_id }
   depends_on = [time_sleep.sleep_after_composer_creation,
     time_sleep.wait_for_notification,
     time_sleep.wait_for_cloud_function
   ]
 }
+
+data "archive_file" "trainer_files_zip" {
+  type = "zip"
+  output_path = "${path.module}/trainer_files.zip"
+  
+  source {
+    content = file("../dockerfiles/lgb_trainer_dockerfile")
+    filename = "Dockerfile"
+  }
+  
+  source {
+    content = file("../model/trainer.py")
+    filename = "trainer.py"
+  }
+  
+  source {
+   content = file("../dockerfiles/trainer_requirements.txt")
+   filename = "trainer_requirements.txt"
+  }
+}
+
+data "archive_file" "serving_files_zip" {
+  type = "zip"
+  output_path = "${path.module}/service_files.zip"
+  
+  source {
+    content = file("../dockerfiles/vertexai_serving_dockerfile")
+    filename = "Dockerfile"
+  }
+  
+  source {
+    content = file("../model/app.py")
+    filename = "app.py"
+  }
+}
+
+data "archive_file" "prediction_files_zip" {
+  type = "zip"
+  output_path = "${path.module}/predict_files.zip"
+  
+  source {
+    content = file("../dockerfiles/deploy_predictions_dockerfile")
+    filename = "Dockerfile"
+  }
+  
+  source {
+    content = file("../model/deploy_model_prediction.py")
+    filename = "deploy_model_prediction.py"
+  }
+}
+
+data "archive_file" "submission_files_zip" {
+  type  = "zip"
+  output_path = "${path.module}/submit_files.zip"
+  
+  source {
+    content = file("../dockerfiles/hpt_trainer_dockerfile")
+    filename = "Dockerfile"
+  }
+  
+  source {
+    content = file("../model/hpt_and_train.py")
+    filename = "hpt_and_train.py"
+  }
+  
+  source {
+    content = file("../model/pipeline_submission.py")
+    filename = "pipeline_submission.py"
+  }
+}
+
+resource "google_artifact_registry_repository" "kfp_final_outcome" {
+  project       = local.project_id
+  location      = local.region
+  repository_id = "kfp"
+  format        = "DOCKER"
+  depends_on    = [time_sleep.wait_for_composer_apis]
+}
+
+locals {
+  trainer_files_zip_sha256 = filebase64sha256(data.archive_file.trainer_files_zip.output_path)
+  serving_files_zip_sha256 = filebase64sha256(data.archive_file.serving_files_zip.output_path)
+  predict_files_zip_sha256 = filebase64sha256(data.archive_file.prediction_files_zip.output_path)
+  submitter_files_zip_sha256 = filebase64sha256(data.archive_file.submission_files_zip.output_path)
+  kfp_repo = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.kfp_final_outcome.repository_id}"
+  trainer_base_image = "${local.kfp_repo}/lightgbm_trainer"
+  serving_base_image = "${local.kfp_repo}/trainer_serving_image"
+  predict_base_image = "${local.kfp_repo}/offline_model_prediction"
+  submit_base_image = "${local.kfp_repo}/kfp_runner"
+  kfp_image_tag = "1.0.0"
+  trainer_image_uri = "${local.trainer_base_image}:${local.kfp_image_tag}"
+  serving_image_uri = "${local.serving_base_image}:${local.kfp_image_tag}"
+  predict_image_uri = "${local.predict_base_image}:${local.kfp_image_tag}"
+  submit_image_uri = "${local.submit_base_image}:${local.kfp_image_tag}"
+  submit_zip_sha = data.archive_file.submission_files_zip.output_base64sha256
+}
+
+resource "google_storage_bucket" "kfp_builds" {
+  project                     = local.project_id
+  name                        = "kfp-artifacts"
+  location                    = local.region
+  uniform_bucket_level_access = true
+  force_destroy               = true
+}
+
+resource "google_storage_bucket" "hpt_gcs_root" {
+  project                     = local.project_id
+  name                        = "corpor-sales-lgb-hpt"
+  location                    = local.region
+  uniform_bucket_level_access = true
+  force_destroy               = true
+}
+
+resource "google_storage_bucket" "pipeline_root" {
+  project                     = local.project_id
+  name                        = "lgb-pipeline"
+  location                    = local.region
+  uniform_bucket_level_access = true
+  force_destroy               = true
+}
+
+resource "google_storage_bucket_object" "trainer_artifacts" {
+  name           = "trainer_files.zip"
+  source         = data.archive_file.trainer_files_zip.output_path
+  bucket         = google_storage_bucket.kfp_builds.name
+  detect_md5hash = local.trainer_files_zip_sha256
+}
+
+resource "google_storage_bucket_object" "serving_artifacts" {
+  name           = "serving_files.zip"
+  source         = data.archive_file.serving_files_zip.output_path
+  bucket         = google_storage_bucket.kfp_builds.name
+  detect_md5hash = local.serving_files_zip_sha256
+}
+
+resource "google_storage_bucket_object" "prediction_artifacts" {
+  name           = "predict_files.zip"
+  source         = data.archive_file.prediction_files_zip.output_path
+  bucket         = google_storage_bucket.kfp_builds.name
+  detect_md5hash = local.predict_files_zip_sha256
+}
+
+resource "google_storage_bucket_object" "submission_artifacts" {
+  name           = "submit_files.zip"
+  source         = data.archive_file.submission_files_zip.output_path
+  bucket         = google_storage_bucket.kfp_builds.name
+  detect_md5hash = local.submitter_files_zip_sha256
+}
+
+resource "null_resource" "trainer_built_and_push" {
+  triggers = {
+    zip_hash = data.archive_file.trainer_files_zip.output_sha
+    image_uri = local.trainer_image_uri
+  }
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -eu
+      gcloud builds submit \
+        --project ${var.project_id} \
+        --region ${var.region} \
+        --tag ${local.trainer_image_uri} \
+        gs://${google_storage_bucket.kfp_builds.name}/${google_storage_bucket_object.trainer_artifacts.name}
+      EOT
+  }
+}
+
+resource "null_resource" "serving_built_and_push" {
+  triggers = {
+    zip_hash = data.archive_file.serving_files_zip.output_sha
+    image_uri = local.serving_image_uri
+  }
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -eu
+      gcloud builds submit \
+        --project ${var.project_id} \
+        --region ${var.region} \
+        --tag ${local.serving_image_uri} \
+        gs://${google_storage_bucket.kfp_builds.name}/${google_storage_bucket_object.serving_artifacts.name}
+      EOT
+  }
+}
+
+resource "null_resource" "prediction_built_and_push" {
+  triggers = {
+    zip_hash = data.archive_file.prediction_files_zip.output_sha
+    image_uri = local.predict_image_uri
+  }
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -eu
+      gcloud builds submit \
+        --project ${var.project_id} \
+        --region ${var.region} \
+        --tag ${local.predict_image_uri} \
+        gs://${google_storage_bucket.kfp_builds.name}/${google_storage_bucket_object.prediction_artifacts.name}
+      EOT
+  }
+}
+
+resource "null_resource" "submission_built_and_push" {
+  triggers = {
+    zip_hash = data.archive_file.submission_files_zip.output_sha
+    image_uri = local.submit_image_uri
+  }
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -eu
+      gcloud builds submit \
+        --project ${var.project_id} \
+        --region ${var.region} \
+        --tag ${local.submit_image_uri} \
+        gs://${google_storage_bucket.kfp_builds.name}/${google_storage_bucket_object.submission_artifacts.name}
+      EOT
+  }
+}
+
+resource "google_service_account" "trainer_service_account" {
+  account_id   = var.trainer_sa
+  display_name = "trainer sa"
+}
+
+resource "google_service_account" "pipeline_service_account" {
+  account_id   = var.pipeline_sa
+  display_name = "pipeline sa"
+}
+
+resource "google_service_account" "kfp_sumit_sa" {
+  account_id   = var.kfp_sa
+  display_name = "kfp sa"
+}
+
+resource "google_service_account" "eventarc_invoker" {
+  account_id   = "eventarc-invoker"
+  display_name = "SA used by Eventarc to invoke Cloud Run"
+}
+
+resource "google_storage_bucket_iam_member" "bucket_reader" {
+  bucket = "lgb-pipeline"
+  role   = "roles/storage.legacyBucketReader"
+  member = "serviceAccount:${google_service_account.kfp_sumit_sa.email}"
+}
+
+resource "google_storage_bucket_iam_member" "object_admin" {
+  bucket = "lgb-pipeline"
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.kfp_sumit_sa.email}"
+}
+
+resource "google_project_iam_member" "kfp_ai_platform" {
+  project = local.project_id
+  role = "roles/aiplatform.user"
+  member = "serviceAccount:${google_service_account.kfp_sumit_sa.email}"
+}
+
+resource "google_service_account_iam_member" "submitter_can_use_kfp" {
+  service_account_id = google_service_account.pipeline_service_account.name
+  role = "roles/iam.serviceAccountUser"
+  member = "serviceAccount:${google_service_account.kfp_sumit_sa.email}"
+}
+
+resource "google_project_iam_member" "trainer_sa_jobuser" {
+  project = local.project_id
+  role    = "roles/bigquery.jobUser"
+  member  = "serviceAccount:${google_service_account.trainer_service_account.email}"
+}
+
+resource "google_project_iam_member" "trainer_sa_readsessionuser" {
+  project = local.project_id
+  role    = "roles/bigquery.readSessionUser"
+  member  = "serviceAccount:${google_service_account.trainer_service_account.email}"
+}
+
+resource "google_project_iam_member" "trainer_sa_dataeditor" {
+  project = local.project_id
+  role    = "roles/bigquery.dataEditor"
+  member  = "serviceAccount:${google_service_account.trainer_service_account.email}"
+}
+
+resource "google_project_iam_member" "trainer_sa_logwriter" {
+  project = local.project_id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.trainer_service_account.email}"
+}
+
+resource "google_project_iam_member" "trainer_sa_metricwritter" {
+  project = local.project_id
+  role    = "roles/monitoring.metricWriter"
+  member  = "serviceAccount:${google_service_account.trainer_service_account.email}"
+}
+
+resource "google_project_iam_member" "trainer_sa_aiplatformuser" {
+  project = local.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_service_account.pipeline_service_account.email}"
+}
+
+resource "google_storage_bucket_iam_member" "terainer_sa_bucket_objectadmin" {
+  bucket = google_storage_bucket.hpt_gcs_root.name
+  role = "roles/storage.objectAdmin"
+  member  = "serviceAccount:${google_service_account.trainer_service_account.email}"
+}
+
+resource "google_storage_bucket_iam_member" "terainer_sa_bucket_bucketviewer" {
+  bucket = google_storage_bucket.hpt_gcs_root.name
+  role = "roles/storage.bucketViewer"
+  member  = "serviceAccount:${google_service_account.trainer_service_account.email}"
+}
+
+resource "google_storage_bucket_iam_member" "coropr_sa_objectviewer" {
+  bucket = google_storage_bucket.corporacion_data_bucket_creation.name
+  role = "roles/storage.objectViewer"
+  member  = "serviceAccount:${google_service_account.trainer_service_account.email}"
+}
+
+resource "google_storage_bucket_iam_member" "pipeline_sa_objectAdmin" {
+  bucket = google_storage_bucket.pipeline_root.name
+  role = "roles/storage.objectAdmin"
+  member  = "serviceAccount:${google_service_account.pipeline_service_account.email}"
+}
+
+resource "google_service_account_iam_member" "pipeline_can_use_trainer" {
+  service_account_id = google_service_account.trainer_service_account.name
+  role = "roles/iam.serviceAccountUser"
+  member = "serviceAccount:${google_service_account.pipeline_service_account.email}"
+}
+
+resource "google_pubsub_topic" "dataform_complete" {
+  name = "features-ready"
+  depends_on = [time_sleep.wait_for_composer_apis]
+}
+
+resource "google_pubsub_topic_iam_member" "dataform_pubsub_publisher" {
+  topic = google_pubsub_topic.dataform_complete.name
+  role = "roles/pubsub.publisher"
+  member = "serviceAccount:${google_service_account.dataform_runner.email}"
+}
+
+resource "google_cloud_run_v2_service" "kfp_submit" {
+  name = "kfp-submit"
+  location = var.region
+  ingress = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
+  template {
+    service_account = google_service_account.kfp_sumit_sa.email
+    annotations = {
+      "redeploy/hash" = local.submit_zip_sha
+    }
+    containers {
+      image = local.submit_image_uri
+      
+      env {
+        name = "project_id"
+        value = var.project_id
+      }
+      
+      env {
+        name = "region"
+        value = var.region
+      }
+      
+      env {
+        name = "pipeline_root"
+        value = "gs://lgb-pipeline"
+      }
+      
+      env {
+        name = "pipeline_sa"
+        value = google_service_account.pipeline_service_account.email
+      }
+      
+      env {
+        name = "metric_tag"
+        value = "rmse"
+      }
+      
+      env {
+        name = "max_trials"
+        value = "3"
+      }
+      
+      env {
+        name = "parallel_trials"
+        value = "3"
+      }
+      
+      env {
+        name = "trainer_sa"
+        value = google_service_account.trainer_service_account.email
+      }
+      
+      env {
+        name = "hpt_gcs_root"
+        value = "gs://corpor-sales-lgb-hpt"
+      }
+      
+      env {
+        name = "trainer_image"
+        value = local.trainer_image_uri
+      }
+      
+      env {
+        name = "serving_image"
+        value = local.serving_image_uri
+      }
+      
+      env {
+        name = "predict_image"
+        value = local.predict_image_uri
+      }
+    }
+  }
+  depends_on = [google_artifact_registry_repository.kfp_final_outcome,
+    null_resource.submission_built_and_push]
+}
+
+resource "google_cloud_run_v2_service_iam_member" "eventarc_trigger_invoker_kfp" {
+  location = var.region
+  name = google_cloud_run_v2_service.kfp_submit.name
+  role = "roles/run.invoker"
+  member = "serviceAccount:${google_service_account.eventarc_invoker.email}"
+}
+
+resource "google_eventarc_trigger" "dataform_models_ready_for_kfp" {
+  provider = google-beta
+  name         = "features-ready-to-kfp"
+  location     = var.region
+  service_account = google_service_account.eventarc_invoker.email
+  
+  matching_criteria {
+    attribute = "type"
+    value = "google.cloud.pubsub.topic.v1.messagePublished"
+  }
+  
+  transport {
+    pubsub{
+      topic = google_pubsub_topic.dataform_complete.id
+    }
+  }
+  
+  destination {
+    cloud_run_service {
+      service = google_cloud_run_v2_service.kfp_submit.name
+      region = var.region
+      path = "/"
+    }
+  }
+}
+
+data "archive_file" "zip_files_for_post_preds" {
+  type = "zip"
+  output_path = "${path.module}/post_preds.zip"
+  
+  source {
+    content = file("../model/post_preds_process.py")
+    filename = "post_preds_process.py"
+  }
+  
+  source {
+    content = file("../dockerfiles/post_preds_dockerfile")
+    filename = "Dockerfile"
+  }
+}
+
+resource "google_artifact_registry_repository" "post_preds_repo" {
+  project       = local.project_id
+  location      = local.region
+  repository_id = "post-preds"
+  format        = "DOCKER"
+  depends_on    = [time_sleep.wait_for_composer_apis]
+}
+
+locals {
+  post_preds_sha256 = filebase64sha256(data.archive_file.zip_files_for_post_preds.output_path)
+  post_preds_base_image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.post_preds_repo.repository_id}"
+  post_preds_version = "1.0.0"
+  post_preds_image_uri = "${local.post_preds_base_image}/post_preds_process:${local.post_preds_version}" 
+  post_preds_zip_sha = data.archive_file.zip_files_for_post_preds.output_base64sha256
+}
+
+resource "google_storage_bucket" "post_preds_bucket_creation" {
+  project                     = local.project_id
+  name                        = "kfp-post-preds-process"
+  location                    = local.region
+  uniform_bucket_level_access = true
+  force_destroy               = true
+}
+
+resource "google_storage_bucket_object" "upload_post_preds_package" {
+  name = "post_preds.zip"
+  source = data.archive_file.zip_files_for_post_preds.output_path
+  bucket = google_storage_bucket.post_preds_bucket_creation.name
+  detect_md5hash = local.post_preds_sha256
+}
+
+resource "null_resource" "post_preds_built_and_push" {
+  triggers = {
+    zip_hash = data.archive_file.zip_files_for_post_preds.output_sha
+    image_uri = local.post_preds_image_uri
+  }
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -eu
+      gcloud builds submit \
+        --project ${var.project_id} \
+        --region ${var.region} \
+        --tag ${local.post_preds_image_uri} \
+        gs://${google_storage_bucket.post_preds_bucket_creation.name}/${google_storage_bucket_object.upload_post_preds_package.name}
+      EOT
+  }
+}
+
+resource "google_pubsub_topic" "post_preds_topic" {
+  name = "post-preds-topic"
+  project = var.project_id
+  depends_on = [time_sleep.wait_for_composer_apis]
+}
+
+resource "google_service_account" "post_preds_sa" {
+  account_id = "post-preds-processer-sa"
+  description = "SA for Cloud Run post-prediction processor"
+}
+
+resource "google_project_iam_member" "post_preds_bq_jobuser" {
+  project = var.project_id
+  role = "roles/bigquery.jobUser"
+  member = "serviceAccount:${google_service_account.post_preds_sa.email}"
+}
+
+resource "google_bigquery_dataset_iam_member" "post_preds_bq_dataviewer" {
+  dataset_id = var.preds_dataset
+  role = "roles/bigquery.dataViewer"
+  member = "serviceAccount:${google_service_account.post_preds_sa.email}"
+}
+
+resource "google_storage_bucket_iam_member" "post_preds_bucket_objectadmin" {
+  bucket = "corpor-sales-data"
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.post_preds_sa.email}"
+}
+
+
+resource "google_cloud_run_v2_service" "post_preds_cr" {
+  name = "post-preds-processer-cloud-run-service"
+  location = var.region
+  ingress = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
+  template {
+    service_account = google_service_account.post_preds_sa.email
+    annotations = {
+      "redeploy/hash" = local.post_preds_zip_sha
+    }
+    containers {
+      image = local.post_preds_image_uri
+      
+      env {
+        name = "project_id"
+        value = var.project_id
+      }
+      
+      env {
+        name = "region"
+        value = var.region
+      }
+      
+      env {
+        name = "bq_dataset"
+        value = var.preds_dataset
+      }
+      
+      env {
+        name = "bq_table"
+        value = var.preds_table
+      }
+      
+      env {
+        name = "data_bucket"
+        value = google_storage_bucket.corporacion_data_bucket_creation.name
+      }
+      
+      resources {
+          limits = {
+            memory = "8Gi"
+            cpu    = "2"
+          }
+        }
+    }
+    
+  }
+  depends_on = [google_artifact_registry_repository.post_preds_repo,
+    null_resource.post_preds_built_and_push]
+}
+
+resource "google_pubsub_topic_iam_member" "trainer_publisher" {
+  project = var.project_id
+  topic = google_pubsub_topic.post_preds_topic.name
+  role = "roles/pubsub.publisher"
+  member = "serviceAccount:${google_service_account.trainer_service_account.email}"
+}
+
+resource "google_cloud_run_v2_service_iam_member" "eventarc_trigger_invoker_post_preds" {
+  location = var.region
+  name = google_cloud_run_v2_service.post_preds_cr.name
+  role = "roles/run.invoker"
+  member = "serviceAccount:${google_service_account.eventarc_invoker.email}"
+}
+
+resource "google_eventarc_trigger" "post_preds_process_eventarc_trigger" {
+  name = "post-predict-eventarc-trigger"
+  location = var.region
+  
+  transport {
+    pubsub {
+      topic = google_pubsub_topic.post_preds_topic.id
+    }
+  }
+  
+  matching_criteria {
+    attribute = "type"
+    value = "google.cloud.pubsub.topic.v1.messagePublished"
+  }
+  
+  destination {
+    cloud_run_service {
+      service = google_cloud_run_v2_service.post_preds_cr.name
+      region = var.region
+      path = "/"
+    }
+  }
+  service_account = google_service_account.eventarc_invoker.email
+}
+
+
+
+
+

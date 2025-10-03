@@ -1,0 +1,23 @@
+FROM python:3.10-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libgomp1 \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY deploy_model_prediction.py .
+RUN pip install --no-cache-dir \
+    numpy \
+    pandas \
+    lightgbm \
+    google-cloud-pubsub \
+    google-cloud-storage \
+    google-cloud-bigquery \
+    db-dtypes \
+    pandas-gbq>=0.26.1 \
+    google-cloud-bigquery-storage
+
+CMD ["python", "deploy_model_prediction.py"]
+                

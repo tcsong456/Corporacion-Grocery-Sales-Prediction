@@ -2,12 +2,19 @@ gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
 PROJECT_ID=$(jq -r '.project_id' $GOOGLE_APPLICATION_CREDENTIALS)
 gcloud config set project "$PROJECT_ID"
 
+TEST_TABLE="df_test"
+OUTPUT_DATASET="corpor_sales_submission"
+OUTPUT_TABLE="corpor_preds"
+INPUT_DATASET="corpor_sales_prediction_dataset"
 GCP_REGION="europe-west1"
 UMSA="corpor-sales-sa"
 backend_bucket="tfstate-${PROJECT_ID}"
 CC3_ENV_NM="${PROJECT_ID}-cc3"
 SALES_BUCKT="corpor-sales-data"
 TOPIC="cc3-bucket-events"
+trainer_sa="corpor-lgb-trainer"
+pipeline_sa="pipeline-runner"
+kfp_sa="corpor-kfp-sa"
 
 if ! gsutil ls -b gs://${backend_bucket} &>/dev/null; then
   echo "creating bucket ${backend_bucket}"
@@ -25,48 +32,35 @@ gcloud storage buckets add-iam-policy-binding gs://$backend_bucket \
   --role="roles/storage.objectViewer"
 
 cd $(pwd)/terraform 
-sed -i 's/\r$//' main.tf
-terraform init -input=false -backend-config="credentials=/run/secrets/key.json"
-if gcloud eventarc triggers describe "trigger-after-all-dags-done" \
-  --location=${GCP_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
-  echo "Found remote trigger on GCP"
-  terraform import google_eventarc_trigger.dataform_on_airflow_completion \
-    projects/${PROJECT_ID}/locations/${GCP_REGION}/trigger-after-all-dags-done
-else
-  echo "Remote trigger not found,import skipped"
-fi
+sed -i 's/\r$//' main.tf 
+terraform init -input=false -reconfigure -backend-config="credentials=/run/secrets/key.json"
 
-terraform plan \
+terraform plan -input=false -no-color \
   -var="project_id=${PROJECT_ID}" \
-  -var="umsa=${UMSA}" \
   -var="region=${GCP_REGION}" \
+  -var="umsa=${UMSA}" \
+  -var="trainer_sa=${trainer_sa}" \
+  -var="pipeline_sa=${pipeline_sa}" \
+  -var="kfp_sa=${kfp_sa}" \
+  -var="preds_dataset=${OUTPUT_DATASET}" \
+  -var="preds_table=${OUTPUT_TABLE}"
 
-terraform apply \
+terraform apply -input=false \
   -var="project_id=${PROJECT_ID}" \
-  -var="umsa=${UMSA}" \
   -var="region=${GCP_REGION}" \
+  -var="umsa=${UMSA}" \
+  -var="trainer_sa=${trainer_sa}" \
+  -var="pipeline_sa=${pipeline_sa}" \
+  -var="kfp_sa=${kfp_sa}" \
+  -var="preds_dataset=${OUTPUT_DATASET}" \
+  -var="preds_table=${OUTPUT_TABLE}" \
   --auto-approve >> provisioning.output
 
-gcloud storage rsync -r --checksums-only ../data "gs://$SALES_BUCKT/"
-TRIGGER_NAME=$(
-  gcloud eventarc triggers list \
-    --location "$GCP_REGION" \
-    --filter="transport.pubsub.topic~$TOPIC" \
-    --format='value(name)'
-  )
-for i in {1..90}; do
-  sub="$(gcloud eventarc triggers describe "$TRIGGER_NAME" \
-          --location "$GCP_REGION" \
-          --format='value(transport.pubsub.subscription)')"
-  if [[ -n "$sub" ]]; then
-    echo "Trigger ready: $sub"
-    break
-  fi
-  sleep 2
-done
-[[ -n "$sub" ]] || { echo "Eventarc trigger not ACTIVE"; exit 1; }
+composer_bucket_prefix=$(gcloud composer environments describe ${PROJECT_ID}-cc3 \
+						--location=${GCP_REGION} \
+						--format="value(config.dagGcsPrefix)" \
+						| sed 's#^gs://##' | cut -d'/' -f1)
+echo '{"purpose":"object_finalize"}' > trigger.json
+gsutil cp trigger.json gs://${composer_bucket_prefix}/dags/_trigger/trigger-$(date +%s).json
 
-DAG_PREFIX=$(gcloud composer environments describe "$CC3_ENV_NM" --location "$GCP_REGION" --format='value(config.dagGcsPrefix)')
-DATA_BUCKET=$(echo "$DAG_PREFIX" | sed -e 's#^gs://##' -e 's#/.*$##')
-printf '{"ts":"%s"}\n' "$(date -Iseconds)" > run.json
-gcloud storage cp run.json "gs://$DATA_BUCKET/dags/_trigger/run.json"
+

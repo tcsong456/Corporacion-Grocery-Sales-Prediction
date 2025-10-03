@@ -1,7 +1,12 @@
 FROM node:20-alpine
 
-RUN apk add --no-cache bash && \
-  npm install -g @dataform/cli@3
+RUN apk add --no-cache bash python3 py3-pip ca-certificates libc6-compat \
+ && npm install -g @dataform/cli@3 \
+ && python3 -m venv /opt/venv \
+ && /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel \
+ && /opt/venv/bin/pip install --no-cache-dir "google-cloud-pubsub>=2.0.0"
+
+ENV PATH="/opt/venv/bin:${PATH}"
 
 WORKDIR /workspace
 COPY corpor_sales_dataform/ ./dataform/
@@ -10,6 +15,8 @@ RUN sed -i 's/\r$//' ./cloud_run_dataform.sh && \
   chmod +x ./cloud_run_dataform.sh
 
 ENV NODE_OPTIONS="--max-old-space-size=1536" \
-    MALLOC_ARENA_MAX="2"
+    MALLOC_ARENA_MAX="2" \
+    PROJECT_ID="corporacion-sales-forecasting" \
+    PUBSUB_TOPIC="features-ready"
 
 ENTRYPOINT ["./cloud_run_dataform.sh"]

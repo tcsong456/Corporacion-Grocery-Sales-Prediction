@@ -9,12 +9,12 @@ function dateConversion(date) {
 function buildPastDates(endDate,period) {
     const dates = [];
     const d = new Date(endDate);
-    d.setDate(d.getDate() - 1);
+    d.setUTCDate(d.getUTCDate() - 1);
     const time_span = 7 * period;
     
     for (let i=0;i<7;i++) {
         const currentDate = new Date(d)
-        currentDate.setDate(currentDate.getDate() - time_span + i)
+        currentDate.setUTCDate(currentDate.getUTCDate() - time_span + i)
         dates.push(dateConversion(currentDate))
     }
     return dates;
@@ -39,12 +39,13 @@ groups.forEach(group => {
             allColumns.push(columns);
             });
         const viewName = `${prefix}_dow_mean_${date.replace(/-/g,'')}`;
+        const selectAllColumns = allColumns.join(',\n')
         allDates.sort();
         const minDate = allDates[0];
         const maxDate = allDates[allDates.length-1];
         publish(viewName,{type:"view", tags: ["prod"]}).query(ctx =>`SELECT
                                                       ${groupCol},
-                                                      ${allColumns}
+                                                      ${selectAllColumns}
                                                       FROM ${ctx.ref(refTable)}
                                                       WHERE date BETWEEN DATE('${minDate}') AND DATE('${maxDate}')
                                                       GROUP BY ${groupCol}

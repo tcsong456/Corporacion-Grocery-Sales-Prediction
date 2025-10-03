@@ -34,7 +34,7 @@ const { merge_datasets } = require("includes/merge");
 
 publish("raw_test",{type:"view", tags: ["prod"]}).query(ctx => merge_datasets(datasets,date,ctx,"store_item_class"));
 
-publish("df_test",{type:"view", tags: ["prod"]}).query(ctx => `
+publish("df_test",{type:"table", tags: ["prod"]}).query(ctx => `
                                                     SELECT * FROM(
                                                     SELECT
                                                     DISTINCT a.store_nbr,a.item_nbr,b.* EXCEPT(store_nbr,item_nbr)
